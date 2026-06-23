@@ -35,11 +35,16 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
-            'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                // Hide the spatie `roles` relation so the pivot data isn't
+                // serialized into every response; expose the role as a single
+                // string instead (each user has exactly one role).
+                'user' => $user?->makeHidden('roles'),
+                'role' => $user?->getRoleNames()->first(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
