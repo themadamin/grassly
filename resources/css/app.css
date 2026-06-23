@@ -59,6 +59,15 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    /* Grassly brand palette (see CLAUDE.md → Design language) */
+    --color-lime: #a8e63d;
+    --color-lime-dark: #7ab82a;
+    --color-lime-pale: #ebf7cc;
+    --color-ink: #0f1510;
+    --color-stone: #f4f5f0;
+    --color-harvest: #ef9f27;
+    --color-alert: #e24b4a;
 }
 
 /*

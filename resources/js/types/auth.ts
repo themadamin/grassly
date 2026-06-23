@@ -4,28 +4,15 @@ export type User = {
     email: string;
     avatar?: string;
     email_verified_at: string | null;
-    two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;
 };
 
+// Mirrors App\Enums\UserRole. `null` while the visitor is a guest.
+export type UserRole = 'farmer' | 'merchant' | 'admin';
+
 export type Auth = {
     user: User;
-};
-
-/* @chisel-passkeys */
-export type Passkey = {
-    id: number;
-    name: string;
-    authenticator: string | null;
-    created_at_diff: string;
-    last_used_at_diff: string | null;
-};
-/* @end-chisel-passkeys */
-
-export type TwoFactorConfigContent = {
-    title: string;
-    description: string;
-    buttonText: string;
+    role: UserRole | null;
 };
