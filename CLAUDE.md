@@ -77,10 +77,19 @@ farmer / merchant / admin — managed with **spatie/laravel-permission**
 3. Core marketplace: StorageListing, HarvestForecast, Order (public/private)
 4. Transactions & delivery tracking, order lifecycle, notifications
 5. Social & comms: real-time chat (Reverb), post feed, comments
-6. API & mobile prep: Sanctum tokens, versioned REST endpoints
+6. Testing
+7. API & mobile prep: Sanctum tokens, versioned REST endpoints
 
 ## Current phase
 Phase 2 — Auth & roles.
+- Auth ✅
+- Role assignment ✅
+- Dashboards + role-based routing ✅ (GrasslyAppLayout shell + Farmer/Merchant
+  dashboards; `/dashboard` is an invokable redirect dispatcher → role-guarded
+  `/farmer/dashboard` & `/merchant/dashboard` via spatie `role:` middleware)
+- Profiles / onboarding — deferred to early Phase 3
+- Remaining stub: sidebar `isActive()` nav highlighting, parked until
+  Market/Storage/etc. have real routes to point at
 
 ## Commands
 - Start: `./vendor/bin/sail up -d`
@@ -97,6 +106,12 @@ file so both sides stay in sync.
 - Public landing page: standalone layout (no app shell). Replaces the
   starter kit `welcome` page.
 - Authenticated app: sidebar shell (resources/js/layouts/AppLayout.vue).
+
+## Dashboard routing
+- Separate dashboard route per role: `/farmer/dashboard`,
+  `/merchant/dashboard` (not one shared `/dashboard` that branches in-page).
+- Role-based middleware does the redirect after login, sending each user to
+  their role's dashboard.
 
 ## Design workflow
 - Visual design originates in Claude Design (claude.ai/design), seeded with
