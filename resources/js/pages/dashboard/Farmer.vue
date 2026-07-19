@@ -702,8 +702,8 @@ const greeting = computed(() => {
 });
 
 // NOTE: every figure/card below is static placeholder content matching the
-// Claude Design handoff. When the Phase 3 models exist (StorageListing,
-// HarvestForecast, Order), a controller will pass real data as Inertia props
+// Claude Design handoff. When the Phase 3 models exist (Product, Offer,
+// HarvestForecast), a controller will pass real data as Inertia props
 // and these blocks become v-for loops over typed arrays.
 // TODO(you): define the prop interfaces and `defineProps<FarmerDashboardProps>()`
 // then replace the hard-coded markup with bound data.

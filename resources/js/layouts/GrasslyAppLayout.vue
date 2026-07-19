@@ -34,173 +34,13 @@
 
             <!-- Nav -->
             <nav class="flex flex-col gap-1">
-                <Link
-                    :href="'#dashboard'"
-                    :class="[
-                        navBase,
-                        isActive('#dashboard') ? activeNav : inactiveNav,
-                    ]"
-                >
-                    <svg
-                        width="19"
-                        height="19"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        :stroke="navStroke('#dashboard')"
-                        stroke-width="2.1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <rect x="4" y="4" width="7" height="7" rx="1.5" />
-                        <rect x="13" y="4" width="7" height="7" rx="1.5" />
-                        <rect x="4" y="13" width="7" height="7" rx="1.5" />
-                        <rect x="13" y="13" width="7" height="7" rx="1.5" />
-                    </svg>
-                    <span>Dashboard</span>
-                </Link>
-
-                <Link
-                    :href="'#market'"
-                    :class="[
-                        navBase,
-                        isActive('#market') ? activeNav : inactiveNav,
-                    ]"
-                >
-                    <svg
-                        width="19"
-                        height="19"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        :stroke="navStroke('#market')"
-                        stroke-width="2.1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M4 8 H20" />
-                        <path d="M5 8 L6 19 H18 L19 8" />
-                        <path d="M9 8 V6 a3 3 0 0 1 6 0 v2" />
-                    </svg>
-                    <span>Market</span>
-                </Link>
-
-                <Link
-                    :href="'#storage'"
-                    :class="[
-                        navBase,
-                        isActive('#storage') ? activeNav : inactiveNav,
-                    ]"
-                >
-                    <svg
-                        width="19"
-                        height="19"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        :stroke="navStroke('#storage')"
-                        stroke-width="2.1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M3 9 L12 4 L21 9 V20 H3 Z" />
-                        <path d="M9 20 V13 H15 V20" />
-                    </svg>
-                    <span>Storage</span>
-                </Link>
-
-                <Link
-                    :href="'#orders'"
-                    :class="[
-                        navBase,
-                        isActive('#orders') ? activeNav : inactiveNav,
-                    ]"
-                >
-                    <svg
-                        width="19"
-                        height="19"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        :stroke="navStroke('#orders')"
-                        stroke-width="2.1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <rect x="4" y="4" width="16" height="16" rx="2.5" />
-                        <path d="M8 9 H16" />
-                        <path d="M8 13 H16" />
-                        <path d="M8 17 H12" />
-                    </svg>
-                    <span>Orders</span>
-                </Link>
-
-                <Link
-                    :href="'#harvest'"
-                    :class="[
-                        navBase,
-                        isActive('#harvest') ? activeNav : inactiveNav,
-                    ]"
-                >
-                    <svg
-                        width="19"
-                        height="19"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        :stroke="navStroke('#harvest')"
-                        stroke-width="2.1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M4 18 L9 12 L13 15 L20 6" />
-                        <path d="M15 6 H20 V11" />
-                    </svg>
-                    <span>Harvest</span>
-                </Link>
-
-                <Link
-                    :href="'#chat'"
-                    :class="[
-                        navBase,
-                        isActive('#chat') ? activeNav : inactiveNav,
-                    ]"
-                >
-                    <svg
-                        width="19"
-                        height="19"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        :stroke="navStroke('#chat')"
-                        stroke-width="2.1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M4 5 H20 V16 H12 L8 20 V16 H4 Z" />
-                    </svg>
-                    <span>Chat</span>
-                </Link>
-
-                <Link
-                    :href="'#feed'"
-                    :class="[
-                        navBase,
-                        isActive('#feed') ? activeNav : inactiveNav,
-                    ]"
-                >
-                    <svg
-                        width="19"
-                        height="19"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        :stroke="navStroke('#feed')"
-                        stroke-width="2.1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <circle cx="12" cy="12" r="8" />
-                        <path d="M4 12 H20" />
-                        <path
-                            d="M12 4 C14.5 7 14.5 17 12 20 C9.5 17 9.5 7 12 4 Z"
-                        />
-                    </svg>
-                    <span>Feed</span>
-                </Link>
+                <SidebarNavLink
+                    v-for="item in navItems"
+                    :key="item.label"
+                    :href="item.href"
+                    :label="item.label"
+                    :icon="item.icon"
+                />
             </nav>
 
             <!-- User card -->
@@ -305,9 +145,16 @@
 
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import type { InertiaLinkProps } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import type { SidebarIconName } from '@/components/grassly/SidebarNavIcon.vue';
+import SidebarNavLink from '@/components/grassly/SidebarNavLink.vue';
 import { useInitials } from '@/composables/useInitials';
 import { home } from '@/routes';
+import { dashboard as farmerDashboard } from '@/routes/farmer/index';
+import { dashboard as merchantDashboard } from '@/routes/merchant/index';
+import { index as offerIndex } from '@/routes/offers/index';
+import { index as productIndex } from '@/routes/products/index';
 import type { UserRole } from '@/types/auth';
 
 defineProps<{
@@ -316,45 +163,47 @@ defineProps<{
 
 const page = usePage();
 const { getInitials } = useInitials();
-
-// Shared base classes for nav links; active/inactive variants layered on top.
-const navBase =
-    'flex items-center gap-3 rounded-xl px-3.5 py-[11px] text-[15px] transition-colors';
-const activeNav = 'bg-lime font-bold text-ink';
-const inactiveNav = 'font-semibold text-[#6B7260] hover:bg-lime-pale/60';
-
-// TODO(you): the bottom user card should show the signed-in user. Replace these
-// placeholders by reading the shared auth prop.
-// Hint: import { usePage } from '@inertiajs/vue3'; const page = usePage();
-//   page.props.auth.user (its .name) and page.props.auth.role are typed as
-//   `Auth` via resources/js/types/global.d.ts. Wrap each read in computed() so
-//   the card stays reactive if the user changes.
 const userName = computed<string>(() => page.props.auth.user.name ?? 'No name');
 const role = computed<UserRole>(() => page.props.auth.role ?? 'farmer');
-
-// Avatar initials, derived from the name. (useInitials is the project helper.)
 const initials = computed(() => getInitials(userName.value));
-
-// Role-driven pill colours: farmer = lime-pale chip, otherwise ink. Styling
-// only — it keys off `role` above.
 const rolePill = computed(() =>
     role.value === 'farmer'
         ? { wrap: 'bg-lime-pale text-[#3F5610]', dot: 'bg-[#7AB82A]' }
         : { wrap: 'bg-ink text-white', dot: 'bg-lime' },
 );
 
-// TODO(you): highlight the nav item matching the current page. Each <Link>
-// passes its href to isActive() for the :class binding above.
-// Hint: useCurrentUrl().isCurrentUrl(href) (from '@/composables/useCurrentUrl')
-// compares a href against the current Inertia URL — import it and
-// `return isCurrentUrl(href)`. Point the '#...' hrefs at real routes as each
-// section gets built.
-function isActive(href: string): boolean {
-    return href === '__active__'; // TODO(you): return isCurrentUrl(href)
-}
+const dashboardHref = computed(() => {
+    const byRole = {
+        farmer: farmerDashboard,
+        merchant: merchantDashboard,
+        admin: merchantDashboard, // TODO: real admin dashboard route when it exists
+    } satisfies Record<UserRole, typeof farmerDashboard>;
 
-// Nav icon stroke colour follows the active state.
-function navStroke(href: string): string {
-    return isActive(href) ? '#0F1510' : '#6B7260';
-}
+    return byRole[role.value]().url;
+});
+
+type NavItem = {
+    label: string;
+    href: NonNullable<InertiaLinkProps['href']>;
+    icon: SidebarIconName;
+};
+
+// The sell/buy slot is role-aware: farmers manage Offers, merchants manage
+// Demands (the Offer mirror). Same nav position, different label.
+const offersLabel = role.value === 'merchant' ? 'Demands' : 'Offers';
+
+const navItems: NavItem[] = [
+    {
+        label: 'Dashboard',
+        href: dashboardHref.value,
+        icon: 'dashboard',
+    },
+    { label: 'Market', href: '#market', icon: 'market' },
+    { label: 'Products', href: productIndex().url, icon: 'products' },
+    { label: offersLabel, href: offerIndex().url, icon: 'offers' },
+    { label: 'Orders', href: '#orders', icon: 'orders' },
+    { label: 'Harvest', href: '#harvest', icon: 'harvest' },
+    { label: 'Chat', href: '#chat', icon: 'chat' },
+    { label: 'Feed', href: '#feed', icon: 'feed' },
+];
 </script>

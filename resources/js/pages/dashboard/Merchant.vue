@@ -727,9 +727,9 @@ const greeting = computed(() => {
     return `Welcome back, ${page.props.auth.user.name.split(' ')[0]}`;
 });
 // NOTE: every figure/card below is static placeholder content matching the
-// Claude Design handoff. When the Phase 3 models exist (Order, StorageListing,
-// HarvestForecast, delivery tracking), a controller will pass real data as
-// Inertia props and these blocks become v-for loops over typed arrays.
+// Claude Design handoff. When the Phase 3 models exist (Offer, HarvestForecast),
+// a controller will pass real data as Inertia props and these blocks become
+// v-for loops over typed arrays. (Order + delivery tracking arrive in Phase 4.)
 // TODO(you): define the prop interfaces and `defineProps<MerchantDashboardProps>()`
 // then replace the hard-coded markup with bound data.
 </script>
