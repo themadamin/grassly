@@ -26,16 +26,22 @@
                 class="overflow-hidden rounded-[20px] border border-[#E8EAE2] bg-white"
                 @submit.prevent="submit"
             >
-                <div class="relative flex items-center justify-between bg-lime px-7 py-5">
+                <div
+                    class="relative flex items-center justify-between bg-lime px-7 py-5"
+                >
                     <div>
                         <div
                             class="text-[11px] font-extrabold tracking-[0.12em] text-[#3F5610] uppercase"
                         >
                             Product
                         </div>
-                        <div class="text-[19px] font-extrabold text-ink">Edit product</div>
+                        <div class="text-[19px] font-extrabold text-ink">
+                            Edit product
+                        </div>
                     </div>
-                    <span class="flex size-11 items-center justify-center rounded-xl bg-ink">
+                    <span
+                        class="flex size-11 items-center justify-center rounded-xl bg-ink"
+                    >
                         <svg
                             width="20"
                             height="20"
@@ -54,7 +60,9 @@
 
                 <div class="flex flex-col gap-6 p-7">
                     <div>
-                        <Label for="name" :class="labelClass">Product name / crop</Label>
+                        <Label for="name" :class="labelClass"
+                            >Product name / crop</Label
+                        >
                         <Input
                             id="name"
                             v-model="form.name"
@@ -77,7 +85,10 @@
 
                     <div>
                         <Label for="notes" :class="labelClass"
-                            >Notes <span class="text-[#9CA395]">(optional)</span></Label
+                            >Notes
+                            <span class="text-[#9CA395]"
+                                >(optional)</span
+                            ></Label
                         >
                         <textarea
                             id="notes"
@@ -175,13 +186,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
+import type { Product } from '@/types/product';
 
 const labelClass = 'mb-1.5 block text-[13px] font-bold';
 const fieldClass =
     'h-auto w-full rounded-xl border border-[#E8EAE2] bg-white px-4 py-3.5 text-[15px] font-medium text-ink transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:bg-white';
 
 const props = defineProps<{
-    product: App.Data.ProductData;
+    product: Product;
 }>();
 
 interface ProductForm {

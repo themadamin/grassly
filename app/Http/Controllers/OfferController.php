@@ -78,6 +78,12 @@ class OfferController extends Controller
     {
         return Inertia::render('offers/Show', [
             'offer' => OfferResource::make($offer->load(['product', 'farmer'])),
+            // TODO(you) [Milestone A.3]: the claims (orders) placed against this
+            // offer, mapped with OrderListItemResource::collection(...). Farmer
+            // (owner) sees all incoming claims; a merchant sees just their own.
+            // Empty until Phase 4 orders exist — the campaign-detail claims list
+            // renders from this.
+            'claims' => [],
         ]);
     }
 

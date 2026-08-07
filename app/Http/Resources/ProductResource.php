@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Builds the JSON payload for a single Product (show/edit). Matching TS shape:
- * App\Data\ProductData. Needs the `farmer` relation loaded.
+ * resources/js/types/product (`Product`). Needs the `farmer` relation loaded.
  *
  * @property-read Product $resource
  */

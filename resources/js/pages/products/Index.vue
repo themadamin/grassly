@@ -252,14 +252,15 @@ import ProductController from '@/actions/App/Http/Controllers/ProductController'
 import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
 import { create as createRoute } from '@/routes/products/index';
+import type { ProductListItem } from '@/types/product';
 
 defineProps<{
-    products: App.Data.ProductListItemData[];
+    products: ProductListItem[];
 }>();
 
-const deleteTarget = ref<App.Data.ProductListItemData | null>(null);
+const deleteTarget = ref<ProductListItem | null>(null);
 
-function confirmDelete(product: App.Data.ProductListItemData) {
+function confirmDelete(product: ProductListItem) {
     deleteTarget.value = product;
 }
 

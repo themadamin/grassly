@@ -1,3 +1,10 @@
+// `UserRole` is defined once in `@/types/enums` (mirrors App\Enums\UserRole);
+// imported for `Auth` below and re-exported so existing `@/types/auth` imports
+// keep working. `null` while the visitor is a guest.
+import type { UserRole } from '@/types/enums';
+
+export type { UserRole };
+
 export type User = {
     id: number;
     name: string;
@@ -8,9 +15,6 @@ export type User = {
     updated_at: string;
     [key: string]: unknown;
 };
-
-// Mirrors App\Enums\UserRole. `null` while the visitor is a guest.
-export type UserRole = 'farmer' | 'merchant' | 'admin';
 
 export type Auth = {
     user: User;

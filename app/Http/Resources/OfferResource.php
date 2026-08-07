@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Builds the JSON payload for a single Offer (show/edit screens), including the
- * money/quantity display formatting. Matching TS shape: App\Data\OfferData.
+ * money/quantity display formatting. Matching TS shape: resources/js/types/offer (`Offer`).
  *
  * Needs `product` and `farmer` relations loaded (controller loads both).
  *
@@ -43,6 +43,7 @@ class OfferResource extends JsonResource
             'price_formatted' => $offer->currency->format($offer->price),
             'visibility' => $offer->visibility->value,
             'status' => $offer->status->value,
+            'status_label' => $offer->status->label(),
             'description' => $offer->description,
             'available_from' => $offer->available_from->format('Y-m-d'),
             'available_to' => $offer->available_to?->format('Y-m-d'),

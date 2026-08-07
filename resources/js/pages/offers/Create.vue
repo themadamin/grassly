@@ -352,6 +352,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
+import type { OfferStatus, OfferVisibility } from '@/types/enums';
+import type { ProductListItem } from '@/types/product';
 
 const labelClass = 'mb-1.5 block text-[13px] font-bold';
 const fieldClass =
@@ -360,7 +362,7 @@ const fieldClass =
 const props = defineProps<{
     statuses: Record<string, string>;
     visibilities: Record<string, string>;
-    products: App.Data.ProductListItemData[];
+    products: ProductListItem[];
     // Pre-selected product id when arriving from a product page shortcut.
     selectedProductId: number | null;
 }>();
@@ -396,11 +398,11 @@ const form = useForm<OfferForm>({
     unit: 'kg',
     price: null,
     // `satisfies` verifies the literal is a real enum value at compile time.
-    visibility: 'public' satisfies App.Enums.OfferVisibility,
+    visibility: 'public' satisfies OfferVisibility,
     available_from: today,
     available_to: '',
     description: '',
-    status: 'draft' satisfies App.Enums.OfferStatus,
+    status: 'draft' satisfies OfferStatus,
 });
 
 function submit() {

@@ -150,10 +150,12 @@ import { computed } from 'vue';
 import type { SidebarIconName } from '@/components/grassly/SidebarNavIcon.vue';
 import SidebarNavLink from '@/components/grassly/SidebarNavLink.vue';
 import { useInitials } from '@/composables/useInitials';
-import { home } from '@/routes';
+import { home, market } from '@/routes';
+import { index as demandIndex } from '@/routes/demands/index';
 import { dashboard as farmerDashboard } from '@/routes/farmer/index';
 import { dashboard as merchantDashboard } from '@/routes/merchant/index';
 import { index as offerIndex } from '@/routes/offers/index';
+import { index as orderIndex } from '@/routes/orders/index';
 import { index as productIndex } from '@/routes/products/index';
 import type { UserRole } from '@/types/auth';
 
@@ -189,8 +191,10 @@ type NavItem = {
 };
 
 // The sell/buy slot is role-aware: farmers manage Offers, merchants manage
-// Demands (the Offer mirror). Same nav position, different label.
-const offersLabel = role.value === 'merchant' ? 'Demands' : 'Offers';
+// Demands (the Offer mirror). Same nav position, different label + destination.
+const isMerchant = role.value === 'merchant';
+const offersLabel = isMerchant ? 'Demands' : 'Offers';
+const offersHref = isMerchant ? demandIndex().url : offerIndex().url;
 
 const navItems: NavItem[] = [
     {
@@ -198,10 +202,10 @@ const navItems: NavItem[] = [
         href: dashboardHref.value,
         icon: 'dashboard',
     },
-    { label: 'Market', href: '#market', icon: 'market' },
+    { label: 'Market', href: market().url, icon: 'market' },
     { label: 'Products', href: productIndex().url, icon: 'products' },
-    { label: offersLabel, href: offerIndex().url, icon: 'offers' },
-    { label: 'Orders', href: '#orders', icon: 'orders' },
+    { label: offersLabel, href: offersHref, icon: 'offers' },
+    { label: 'Orders', href: orderIndex().url, icon: 'orders' },
     { label: 'Harvest', href: '#harvest', icon: 'harvest' },
     { label: 'Chat', href: '#chat', icon: 'chat' },
     { label: 'Feed', href: '#feed', icon: 'feed' },

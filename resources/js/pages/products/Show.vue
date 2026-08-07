@@ -252,9 +252,10 @@ import ProductController from '@/actions/App/Http/Controllers/ProductController'
 import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
 import { useInitials } from '@/composables/useInitials';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
+import type { Product } from '@/types/product';
 
 const props = defineProps<{
-    product: App.Data.ProductData;
+    product: Product;
 }>();
 
 const page = usePage();

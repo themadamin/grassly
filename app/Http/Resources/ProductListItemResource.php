@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Lean Product payload for the Storage index list. Matching TS shape:
- * App\Data\ProductListItemData.
+ * resources/js/types/product (`ProductListItem`).
  *
  * @property-read Product $resource
  */

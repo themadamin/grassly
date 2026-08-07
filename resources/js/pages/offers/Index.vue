@@ -21,7 +21,7 @@
                     <path d="M12 5 V19" />
                     <path d="M5 12 H19" />
                 </svg>
-                New listing
+                New offer
             </Link>
         </template>
 
@@ -155,8 +155,8 @@
                 class="grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-5"
             >
                 <article
-                    v-for="listing in offers"
-                    :key="listing.id"
+                    v-for="offer in offers"
+                    :key="offer.id"
                     class="overflow-hidden rounded-[20px] border border-[#E8EAE2] bg-white"
                 >
                     <!-- Lime header band: crop as the storage-type chip -->
@@ -173,7 +173,7 @@
                     >
                         <span
                             class="text-xs font-extrabold tracking-[0.12em] text-[#3F5610] uppercase"
-                            >{{ listing.product.name }}</span
+                            >{{ offer.product.name }}</span
                         >
                         <svg
                             width="20"
@@ -194,7 +194,7 @@
                         <div
                             class="mb-2.5 text-lg font-extrabold tracking-[-0.01em]"
                         >
-                            {{ listing.title }}
+                            {{ offer.title }}
                         </div>
 
                         <div class="mb-4 flex flex-col gap-[7px]">
@@ -216,7 +216,7 @@
                                     />
                                     <circle cx="12" cy="9" r="2.4" />
                                 </svg>
-                                {{ listing.region }}
+                                {{ offer.region }}
                             </div>
                             <div
                                 class="flex items-center gap-2 text-[13px] text-[#6B7260]"
@@ -242,10 +242,10 @@
                                     <path d="M8 3 V6" />
                                     <path d="M16 3 V6" />
                                 </svg>
-                                {{ formatDate(listing.available_from) }} –
+                                {{ formatDate(offer.available_from) }} –
                                 {{
-                                    listing.available_to
-                                        ? formatDate(listing.available_to)
+                                    offer.available_to
+                                        ? formatDate(offer.available_to)
                                         : 'open'
                                 }}
                             </div>
@@ -266,7 +266,7 @@
                                     <circle cx="8" cy="8" r="1.4" />
                                 </svg>
                                 <span class="font-bold text-[#7AB82A]">{{
-                                    listing.price_formatted
+                                    offer.price_formatted
                                 }}</span>
                             </div>
                         </div>
@@ -276,9 +276,9 @@
                                 <div
                                     class="text-[26px] leading-none font-extrabold tracking-[-0.03em]"
                                 >
-                                    {{ listing.total_quantity }}
+                                    {{ offer.total_quantity }}
                                     <span class="text-base text-[#6B7260]">{{
-                                        listing.unit
+                                        offer.unit
                                     }}</span>
                                 </div>
                                 <div class="mt-1 text-xs text-[#6B7260]">
@@ -288,13 +288,13 @@
                             <!-- Status pill — colours keyed off the enum value -->
                             <span
                                 class="inline-flex items-center gap-1.5 rounded-full px-[13px] py-1.5 text-xs font-bold capitalize"
-                                :class="statusStyles[listing.status]?.chip"
+                                :class="statusStyles[offer.status]?.chip"
                             >
                                 <span
                                     class="size-1.5 rounded-full"
-                                    :class="statusStyles[listing.status]?.dot"
+                                    :class="statusStyles[offer.status]?.dot"
                                 ></span>
-                                {{ listing.status }}
+                                {{ offer.status_label }}
                             </span>
                         </div>
 
@@ -303,7 +303,7 @@
                             class="flex items-center gap-2 border-t border-[#E8EAE2] pt-3.5"
                         >
                             <Link
-                                :href="OfferController.show(listing.id).url"
+                                :href="OfferController.show(offer.id).url"
                                 class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#E8EAE2] bg-white py-[9px] text-[13px] font-bold text-ink no-underline transition-colors hover:bg-stone"
                             >
                                 <svg
@@ -324,7 +324,7 @@
                                 View
                             </Link>
                             <Link
-                                :href="OfferController.edit(listing.id).url"
+                                :href="OfferController.edit(offer.id).url"
                                 class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#E8EAE2] bg-white py-[9px] text-[13px] font-bold text-ink no-underline transition-colors hover:bg-stone"
                             >
                                 <svg
@@ -346,8 +346,8 @@
                             <button
                                 type="button"
                                 class="flex size-10 flex-none items-center justify-center rounded-[10px] border border-[#E8EAE2] bg-white transition-colors hover:bg-stone"
-                                aria-label="Delete listing"
-                                @click="confirmDelete(listing)"
+                                aria-label="Delete offer"
+                                @click="confirmDelete(offer)"
                             >
                                 <svg
                                     width="15"
@@ -374,13 +374,13 @@
              open; @update:open closes it (cancel/Esc/backdrop); @confirm deletes. -->
         <ConfirmDialog
             :open="deleteTarget !== null"
-            title="Delete this listing?"
+            title="Delete this offer?"
             :description="
                 deleteTarget
                     ? `This permanently removes “${deleteTarget.title}” and any pending order requests tied to it. This can't be undone.`
                     : ''
             "
-            confirm-label="Delete listing"
+            confirm-label="Delete offer"
             variant="danger"
             @update:open="(value) => !value && cancelDelete()"
             @confirm="performDelete"
@@ -414,19 +414,18 @@ import OfferController from '@/actions/App/Http/Controllers/OfferController';
 import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
 import { create as createRoute } from '@/routes/offers/index';
+import type { OfferListItem } from '@/types/offer';
 
-// Typed with the backend-generated list DTO. App.Data.OfferListItemData is a
-// GLOBAL ambient type (from resources/js/types/generated.d.ts) — no import
-// needed — generated from app/Data/OfferListItemData.php, so it can't drift
-// from the PHP shape.
+// Typed with the hand-written list shape. `OfferListItem` lives in
+// resources/js/types/offer/index.ts and mirrors App\Http\Resources\OfferListItemResource
+// (its enum fields import from @/types/enums).
 //   Concept: defineProps<T>() is Vue's compile-time prop typing — T describes
 //   the props the controller passes (here, `offers`).
 // TODO(you) [Milestone 1.3]: when index() switches to pagination this becomes a
-// paginated wrapper rather than a plain array — the generator also emits
-//   Spatie.LaravelData.PaginatedDataCollection<string, App.Data.OfferListItemData>
-// which you can use here.
+// paginated wrapper (e.g. { data: OfferListItem[]; meta: … }) rather than a
+// plain array — type that wrapper here when you get there.
 defineProps<{
-    offers: App.Data.OfferListItemData[];
+    offers: OfferListItem[];
 }>();
 
 // Status → pill colours. Presentational config (keyed by the OfferStatus
@@ -450,12 +449,12 @@ function formatDate(value: string | null): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Delete flow. `deleteTarget` holds the listing being confirmed (or null =
+// Delete flow. `deleteTarget` holds the offer being confirmed (or null =
 // dialog closed) — one ref encodes both "which row" and "is the dialog open".
-const deleteTarget = ref<App.Data.OfferListItemData | null>(null);
+const deleteTarget = ref<OfferListItem | null>(null);
 
-function confirmDelete(listing: App.Data.OfferListItemData) {
-    deleteTarget.value = listing;
+function confirmDelete(offer: OfferListItem) {
+    deleteTarget.value = offer;
 }
 
 function cancelDelete() {

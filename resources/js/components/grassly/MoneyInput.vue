@@ -69,6 +69,7 @@ function sanitize(raw: string): string {
     let s = raw.replace(/[^\d.]/g, '');
 
     const firstDot = s.indexOf('.');
+
     if (firstDot !== -1) {
         const intPart = s.slice(0, firstDot);
         const decPart = s
@@ -85,6 +86,7 @@ function parse(s: string): number | null {
     if (s === '' || s === '.') {
         return null;
     }
+
     const n = Number.parseFloat(s);
 
     return Number.isNaN(n) ? null : n;
@@ -98,6 +100,7 @@ watch(
         if (focused.value) {
             return;
         }
+
         display.value =
             value === null || value === undefined ? '' : formatGrouped(value);
     },
@@ -109,6 +112,7 @@ function onInput(event: Event) {
     const clean = sanitize(el.value);
 
     display.value = clean;
+
     // If we stripped a character, force the DOM back in sync (caret goes to end,
     // which is fine since the removed char was invalid).
     if (el.value !== clean) {
@@ -130,6 +134,7 @@ function onBlur() {
     focused.value = false;
 
     const value = props.modelValue;
+
     if (value === null || value === undefined) {
         display.value = '';
 

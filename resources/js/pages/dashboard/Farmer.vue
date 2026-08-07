@@ -21,7 +21,7 @@
                     <path d="M12 5 V19" />
                     <path d="M5 12 H19" />
                 </svg>
-                New listing
+                New offer
             </button>
         </template>
 

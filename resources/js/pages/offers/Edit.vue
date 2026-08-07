@@ -335,16 +335,18 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
+import type { Offer } from '@/types/offer';
+import type { ProductListItem } from '@/types/product';
 
 const labelClass = 'mb-1.5 block text-[13px] font-bold';
 const fieldClass =
     'h-auto w-full rounded-xl border border-[#E8EAE2] bg-white px-4 py-3.5 text-[15px] font-medium text-ink transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:bg-white';
 
 const props = defineProps<{
-    offer: App.Data.OfferData;
+    offer: Offer;
     statuses: Record<string, string>;
     visibilities: Record<string, string>;
-    products: App.Data.ProductListItemData[];
+    products: ProductListItem[];
 }>();
 
 interface OfferForm {

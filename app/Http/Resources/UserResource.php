@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Builds the JSON payload for a User (used nested as `farmer`).
  *
  * SINGLE RESPONSIBILITY: model → response array. The matching TypeScript shape
- * lives in App\Data\UserData — keep the keys here in sync with that DTO.
+ * lives in resources/js/types/user (`User`) — keep the keys here in sync with it.
  *
  * @property-read User $resource
  */

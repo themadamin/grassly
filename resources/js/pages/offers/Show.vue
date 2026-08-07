@@ -245,6 +245,62 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- CLAIMS LIST (campaign detail, frame 17). Mirrors by
+                         viewer via claimsHeading. Empty until Phase 4 orders. -->
+                    <div
+                        class="overflow-hidden rounded-[20px] border border-[#E8EAE2] bg-white"
+                    >
+                        <div
+                            class="border-b border-[#E8EAE2] px-[22px] py-[18px]"
+                        >
+                            <h3
+                                class="text-[17px] font-extrabold tracking-[-0.01em]"
+                            >
+                                {{ claimsHeading }}
+                            </h3>
+                        </div>
+
+                        <div
+                            v-for="claim in claims"
+                            :key="claim.id"
+                            class="flex items-center gap-3.5 border-b border-[#E8EAE2] px-[22px] py-4 last:border-b-0"
+                        >
+                            <span
+                                class="flex size-[38px] flex-none items-center justify-center rounded-[11px] bg-stone text-[13px] font-extrabold"
+                            >
+                                {{ getInitials(claim.counterparty) }}
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-sm font-bold">
+                                    {{ claim.counterparty }}
+                                </div>
+                                <div class="text-xs text-[#6B7260]">
+                                    {{ claim.quantity_display }} · #{{
+                                        claim.reference
+                                    }}
+                                    · placed {{ claim.placed_at }}
+                                </div>
+                            </div>
+                            <span
+                                class="inline-flex items-center gap-[5px] rounded-full px-3 py-[5px] text-xs font-bold"
+                                :class="statusPill(claim.status).chip"
+                            >
+                                <span
+                                    class="size-1.5 rounded-full"
+                                    :class="statusPill(claim.status).dot"
+                                ></span>
+                                {{ statusPill(claim.status).label }}
+                            </span>
+                        </div>
+
+                        <div
+                            v-if="claims.length === 0"
+                            class="px-[22px] py-8 text-center text-sm text-[#6B7260]"
+                        >
+                            No claims yet.
+                        </div>
+                    </div>
                 </div>
 
                 <!-- RIGHT: action panel (owner vs viewer) -->
@@ -265,7 +321,13 @@
                             <div
                                 class="mb-4 text-sm leading-normal text-[#6B7260]"
                             >
-                                This is your listing.
+                                <span class="font-bold text-ink"
+                                    >{{ claims.length }}
+                                    {{
+                                        claims.length === 1 ? 'claim' : 'claims'
+                                    }}</span
+                                >
+                                against this offer so far.
                             </div>
                             <Link
                                 :href="OfferController.edit(offer.id).url"
@@ -341,13 +403,12 @@
                                 {{ offer.remaining_display }} available ·
                                 {{ offer.region }}
                             </div>
-                            <!-- "Place order" (Phase 4) + "Message farmer"
-                                 (Phase 5) — inert placeholders until those
-                                 features exist. -->
+                            <!-- "Place order" opens the claim modal (frame 16).
+                                 "Message farmer" is Phase 5 chat — inert. -->
                             <button
                                 type="button"
-                                disabled
-                                class="mb-2.5 inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-lime py-3.5 text-[15px] font-bold text-ink opacity-60"
+                                class="mb-2.5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime py-3.5 text-[15px] font-bold text-ink transition-colors hover:bg-lime-dark"
+                                @click="showClaimModal = true"
                             >
                                 <svg
                                     width="16"
@@ -420,6 +481,10 @@
                 </svg>
             </template>
         </ConfirmDialog>
+
+        <!-- Claim modal (frame 16). Opened by a merchant viewer's "Place order".
+             The form logic inside is your Milestone A.2 learning surface. -->
+        <ClaimOrderModal v-model:open="showClaimModal" :offer="offer" />
     </GrasslyAppLayout>
 </template>
 
@@ -427,21 +492,42 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import OfferController from '@/actions/App/Http/Controllers/OfferController';
+import ClaimOrderModal from '@/components/grassly/ClaimOrderModal.vue';
 import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
 import { useInitials } from '@/composables/useInitials';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
+import { statusPill } from '@/lib/orderStatus';
+import type { Offer } from '@/types/offer';
+import type { OrderListItem } from '@/types/order';
 
-// Typed with the backend-generated DTO. App.Data.OfferData is a GLOBAL ambient
-// type (from resources/js/types/generated.d.ts) — no import needed. It already
-// nests `farmer` (App.Data.UserData) and exposes `user_id`, so the farmer panel
-// and the isOwner check below stay fully typed. The controller's show() loads
-// the farmer relation so OfferData can map it.
-const props = defineProps<{
-    offer: App.Data.OfferData;
-}>();
+// Typed with the hand-written detail shape. `Offer` lives in
+// resources/js/types/offer/index.ts and mirrors App\Http\Resources\OfferResource.
+// It nests `farmer` (the `User` shape from @/types/user) and exposes `user_id`,
+// so the farmer panel and the isOwner check below stay fully typed. The
+// controller's show() loads the farmer relation so the resource can map it.
+const props = withDefaults(
+    defineProps<{
+        offer: Offer;
+        // Claims (orders) placed against this offer — the campaign-detail list.
+        // Empty until Phase 4 orders exist.
+        claims?: OrderListItem[];
+    }>(),
+    {
+        claims: () => [],
+    },
+);
 
 const page = usePage();
 const { getInitials } = useInitials();
+
+// Campaign-detail claims list heading mirrors by viewer: the owning farmer sees
+// incoming claims, a merchant viewer sees their own.
+const claimsHeading = computed(() =>
+    isOwner.value ? 'Incoming claims' : 'Your claims',
+);
+
+// Claim modal (frame 16) — a merchant opens it from the "Place order" button.
+const showClaimModal = ref(false);
 
 // Status dot colours (presentational), keyed by OfferStatus value.
 const statusStyles: Record<string, { dot: string }> = {

@@ -9,7 +9,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Lean Offer payload for LIST screens (index/market cards) — no farmer,
  * description, or availability text beyond dates. Matching TS shape:
- * App\Data\OfferListItemData. Needs `product` loaded (index eager loads it).
+ * resources/js/types/offer (`OfferListItem`). Needs `product` loaded (index eager loads it).
  *
  * @property-read Offer $resource
  */
@@ -36,6 +36,7 @@ class OfferListItemResource extends JsonResource
             'price_formatted' => $offer->currency->format($offer->price),
             'visibility' => $offer->visibility->value,
             'status' => $offer->status->value,
+            'status_label' => $offer->status->label(),
             'available_from' => $offer->available_from->format('Y-m-d'),
             'available_to' => $offer->available_to?->format('Y-m-d'),
         ];
