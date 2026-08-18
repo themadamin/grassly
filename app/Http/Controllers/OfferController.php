@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\Filters\OfferFilterData;
 use App\Enums\OfferStatus;
 use App\Enums\OfferVisibility;
+use App\Filters\ApplyOffersFilter;
+use App\Http\Requests\Offer\IndexOfferRequest;
 use App\Http\Requests\StoreOfferRequest;
 use App\Http\Requests\UpdateOfferRequest;
 use App\Http\Resources\OfferListItemResource;
 use App\Http\Resources\OfferResource;
 use App\Http\Resources\ProductListItemResource;
+use App\Http\Resources\RegionResource;
 use App\Models\Offer;
 use App\Models\Product;
+use App\Models\Region;
 use App\Policies\OfferPolicy;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Collection;
@@ -23,19 +28,28 @@ class OfferController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
+     * Fixed order: base scope → filters → sort → paginate. The base scope
+     * (whereOwnedBy) is applied FIRST and is not a user-supplied filter — the
+     * pipeline can only narrow it, never widen it, so no query param can surface
+     * another farmer's offers.
      */
-    public function index(): Response
+    public function index(IndexOfferRequest $request, ApplyOffersFilter $applyFilters): Response
     {
-        // Eager load product so the list resource can nest it without an N+1
-        // (and without tripping preventLazyLoading).
-        $offers = Offer::query()
-            ->with('product')
-            ->where('user_id', request()->user()->id)
-            ->latest()
-            ->get();
+        $filters = OfferFilterData::fromRequest($request);
+
+        $offers = $applyFilters(
+            Offer::query()
+                ->with(['product.crop.category', 'regions'])
+                ->whereOwnedBy($request->user()),
+            $filters,
+        )
+            ->paginate($request->integer('per_page', 20))
+            ->withQueryString();
 
         return Inertia::render('offers/Index', [
             'offers' => OfferListItemResource::collection($offers),
+            'filters' => $filters,
         ]);
     }
 
@@ -48,6 +62,7 @@ class OfferController extends Controller
             'statuses' => OfferStatus::options(),
             'visibilities' => OfferVisibility::options(),
             'products' => ProductListItemResource::collection($this->farmerProducts()),
+            'regions' => RegionResource::collection(Region::all()),
             // Pre-select a product when arriving from a product page's shortcut.
             'selectedProductId' => request()->integer('product_id') ?: null,
         ]);
@@ -59,14 +74,16 @@ class OfferController extends Controller
     public function store(StoreOfferRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $regionIds = $data['region_ids'];
+        unset($data['region_ids']);
 
-        // No order claims yet in Phase 3, so remaining starts equal to total.
-        // price arrives as decimal dollars; MoneyCast converts to minor units.
-        Offer::create([
+        $offer = Offer::create([
             ...$data,
             'user_id' => $request->user()->id,
             'remaining_quantity' => $data['total_quantity'],
         ]);
+
+        $offer->regions()->sync($regionIds);
 
         return redirect()->route('offers.index');
     }
@@ -77,7 +94,7 @@ class OfferController extends Controller
     public function show(Offer $offer): Response
     {
         return Inertia::render('offers/Show', [
-            'offer' => OfferResource::make($offer->load(['product', 'farmer'])),
+            'offer' => OfferResource::make($offer->load(['product.crop.category', 'farmer', 'regions'])),
             // TODO(you) [Milestone A.3]: the claims (orders) placed against this
             // offer, mapped with OrderListItemResource::collection(...). Farmer
             // (owner) sees all incoming claims; a merchant sees just their own.
@@ -93,10 +110,11 @@ class OfferController extends Controller
     public function edit(Offer $offer): Response
     {
         return Inertia::render('offers/Edit', [
-            'offer' => OfferResource::make($offer->load(['product', 'farmer'])),
+            'offer' => OfferResource::make($offer->load(['product.crop.category', 'farmer', 'regions'])),
             'statuses' => OfferStatus::options(),
             'visibilities' => OfferVisibility::options(),
             'products' => ProductListItemResource::collection($this->farmerProducts()),
+            'regions' => RegionResource::collection(Region::all()),
         ]);
     }
 
@@ -106,13 +124,16 @@ class OfferController extends Controller
     public function update(UpdateOfferRequest $request, Offer $offer): RedirectResponse
     {
         $data = $request->validated();
+        $regionIds = $data['region_ids'];
+        unset($data['region_ids']);
 
-        // Phase 3 has no order claims, so remaining tracks total.
         // TODO(Phase 4): stop resetting remaining_quantity once orders decrement it.
         $offer->update([
             ...$data,
             'remaining_quantity' => $data['total_quantity'],
         ]);
+
+        $offer->regions()->sync($regionIds);
 
         return redirect()->route('offers.index');
     }
@@ -136,6 +157,7 @@ class OfferController extends Controller
     {
         return Product::query()
             ->where('user_id', request()->user()->id)
+            ->with('crop.category')
             ->orderBy('name')
             ->get();
     }

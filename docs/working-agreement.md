@@ -45,11 +45,17 @@ and hand it back. Only write a complete solution when the developer explicitly a
 
 - **Claude owns:** class/file scaffolding (controller/model/migration/request skeletons,
   route SHAPE), boilerplate, and running tooling (Pint, PHPStan, tests).
-- **The developer owns + is learning:** controller actions, model logic, validation rules,
-  Eloquent queries, Fortify actions, enum methods, policies — the business logic. Stub
-  method bodies with `// TODO(you): ...` plus a hint naming the Laravel concept (e.g.
-  "Rule::enum()", "Eloquent relationship", "form request authorize()"), and explain it —
-  don't fill it in.
+- **Migrations, seeders, and factories are NOT a learning surface — write them in FULL,
+  no stubs.** (Decided 2026-08-12: repetitive/mechanical, not something the developer needs
+  to practice.) This includes schema columns, seed reference data, and factory field
+  definitions — not just the skeleton file.
+- **The developer owns + is learning:** controller actions, model logic (including simple
+  Eloquent relationships — `belongsTo`/`hasMany` one-liners are the exception: write those in
+  full too, they're boilerplate, not logic), validation rules, Eloquent **query-building**
+  (`where`/`whereHas`/filters/search — this stays the core learning surface), Fortify actions,
+  enum methods, policies — the business logic. Stub method bodies with `// TODO(you): ...`
+  plus a hint naming the Laravel concept (e.g. "Rule::enum()", "form request authorize()"),
+  and explain it — don't fill it in.
 - When a Laravel/PHP concept comes up (facades, service container, Eloquent relations,
   middleware, enums, events), add a 1–2 line plain explanation.
 

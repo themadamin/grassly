@@ -88,10 +88,10 @@
                                 <div
                                     class="mb-1.5 text-xs font-bold tracking-[0.04em] text-[#6B7260] uppercase"
                                 >
-                                    Region
+                                    Delivery zones
                                 </div>
                                 <div class="text-lg font-bold">
-                                    {{ offer.region }}
+                                    {{ regionNames }}
                                 </div>
                             </div>
                             <div>
@@ -241,7 +241,7 @@
                                 }}</span>
                             </div>
                             <div class="mt-0.5 text-[13px] text-[#6B7260]">
-                                {{ offer.region }}
+                                {{ regionNames }}
                             </div>
                         </div>
                     </div>
@@ -401,7 +401,7 @@
                             </div>
                             <div class="mb-[18px] text-[13px] text-[#6B7260]">
                                 {{ offer.remaining_display }} available ·
-                                {{ offer.region }}
+                                {{ regionNames }}
                             </div>
                             <!-- "Place order" opens the claim modal (frame 16).
                                  "Message farmer" is Phase 5 chat — inert. -->
@@ -492,8 +492,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import OfferController from '@/actions/App/Http/Controllers/OfferController';
-import ClaimOrderModal from '@/components/grassly/ClaimOrderModal.vue';
-import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
+import ClaimOrderModal from '@/components/order/ClaimOrderModal.vue';
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import { useInitials } from '@/composables/useInitials';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
 import { statusPill } from '@/lib/orderStatus';
@@ -552,6 +552,10 @@ function formatDate(value: string | null): string {
 // owner-only guard is the backend policy you write in Milestone 1.4.
 const isOwner = computed(
     () => page.props.auth.user?.id === props.offer.user_id,
+);
+
+const regionNames = computed(() =>
+    props.offer.regions.map((region) => region.name).join(', '),
 );
 
 // Fulfilment progress bar: percentage of total_quantity still available.

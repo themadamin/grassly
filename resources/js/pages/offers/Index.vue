@@ -2,7 +2,6 @@
     <Head title="My storage listings" />
 
     <GrasslyAppLayout title="My storage listings">
-        <!-- Topbar action -->
         <template #actions>
             <Link
                 :href="createRoute()"
@@ -25,9 +24,8 @@
             </Link>
         </template>
 
-        <!-- EMPTY STATE (frame 08) -->
         <div
-            v-if="offers.length === 0"
+            v-if="offers.data.length === 0 && !hasActiveFilters"
             class="flex min-h-[560px] items-center justify-center p-7"
         >
             <div class="max-w-[420px] text-center">
@@ -117,49 +115,121 @@
             </div>
         </div>
 
-        <!-- LISTING GRID (frame 07) -->
         <div v-else class="p-7">
-            <!-- Count + status filter pills -->
-            <div class="mb-[18px] flex items-center justify-between">
+            <div
+                class="mb-[18px] flex flex-wrap items-center justify-between gap-3"
+            >
                 <div class="flex items-center gap-2.5">
                     <span class="text-sm font-bold"
-                        >{{ offers.length }} listings</span
+                        >{{ offers.meta.total }} listings</span
                     >
-                    <!-- TODO(you): wire these filter pills in Milestone 1.5.
-                         For now they're presentational only. Hint: a debounced
-                         router.get(index.url, { only: ['offers'] }) with
-                         a ?status= query param, read server-side with when(). -->
-                    <span class="flex gap-[7px]">
-                        <span
-                            class="rounded-full border border-[#E8EAE2] bg-white px-3 py-[5px] text-xs font-bold text-ink"
-                            >All</span
+                    <span
+                        class="flex gap-[7px]"
+                        role="tablist"
+                        aria-label="Filter by status"
+                    >
+                        <button
+                            v-for="tab in statusTabs"
+                            :key="tab.label"
+                            type="button"
+                            role="tab"
+                            :aria-selected="filters.status === tab.value"
+                            class="rounded-full px-3 py-[5px] text-xs font-bold transition-colors"
+                            :class="
+                                filters.status === tab.value
+                                    ? 'border border-[#E8EAE2] bg-white text-ink'
+                                    : 'font-semibold text-[#6B7260] hover:text-ink'
+                            "
+                            @click="applyStatus(tab.value)"
                         >
-                        <span
-                            class="rounded-full px-3 py-[5px] text-xs font-semibold text-[#6B7260]"
-                            >On sale</span
-                        >
-                        <span
-                            class="rounded-full px-3 py-[5px] text-xs font-semibold text-[#6B7260]"
-                            >Draft</span
-                        >
-                        <span
-                            class="rounded-full px-3 py-[5px] text-xs font-semibold text-[#6B7260]"
-                            >Closed</span
-                        >
+                            {{ tab.label }}
+                        </button>
                     </span>
+                </div>
+
+                <div class="flex items-center gap-2.5">
+                    <label class="relative">
+                        <span class="sr-only">Search listings</span>
+                        <svg
+                            class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#9AA08E"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="M21 21 L16.5 16.5" />
+                        </svg>
+                        <input
+                            v-model="search"
+                            type="search"
+                            placeholder="Search title or crop…"
+                            class="w-[220px] rounded-xl border border-[#E8EAE2] bg-white py-[9px] pr-3 pl-9 text-[13px] font-medium text-ink placeholder:text-[#9AA08E] focus:border-lime-dark focus:outline-none"
+                            @input="onSearchInput"
+                        />
+                    </label>
+
+                    <label class="relative">
+                        <span class="sr-only">Sort listings</span>
+                        <select
+                            v-model="sort"
+                            class="cursor-pointer appearance-none rounded-xl border border-[#E8EAE2] bg-white py-[9px] pr-8 pl-3.5 text-[13px] font-bold text-ink focus:border-lime-dark focus:outline-none"
+                            @change="applySort"
+                        >
+                            <option
+                                v-for="option in sortOptions"
+                                :key="option.value"
+                                :value="option.value"
+                            >
+                                {{ option.label }}
+                            </option>
+                        </select>
+                        <svg
+                            class="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#6B7260"
+                            stroke-width="2.4"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path d="M6 9 L12 15 L18 9" />
+                        </svg>
+                    </label>
                 </div>
             </div>
 
-            <!-- Cards -->
             <div
+                v-if="offers.data.length === 0"
+                class="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-[#D8DBCF] bg-white/50 text-center"
+            >
+                <p class="text-[15px] font-bold text-ink">
+                    No listings match these filters
+                </p>
+                <button
+                    type="button"
+                    class="text-[13px] font-bold text-lime-dark hover:underline"
+                    @click="clearFilters"
+                >
+                    Clear filters
+                </button>
+            </div>
+
+            <div
+                v-else
                 class="grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-5"
             >
                 <article
-                    v-for="offer in offers"
+                    v-for="offer in offers.data"
                     :key="offer.id"
                     class="overflow-hidden rounded-[20px] border border-[#E8EAE2] bg-white"
                 >
-                    <!-- Lime header band: crop as the storage-type chip -->
                     <div
                         class="relative flex h-[62px] items-center justify-between px-[18px]"
                         style="
@@ -216,7 +286,7 @@
                                     />
                                     <circle cx="12" cy="9" r="2.4" />
                                 </svg>
-                                {{ offer.region }}
+                                {{ offer.regions.map((r) => r.name).join(', ') }}
                             </div>
                             <div
                                 class="flex items-center gap-2 text-[13px] text-[#6B7260]"
@@ -285,7 +355,6 @@
                                     total quantity
                                 </div>
                             </div>
-                            <!-- Status pill — colours keyed off the enum value -->
                             <span
                                 class="inline-flex items-center gap-1.5 rounded-full px-[13px] py-1.5 text-xs font-bold capitalize"
                                 :class="statusStyles[offer.status]?.chip"
@@ -298,7 +367,6 @@
                             </span>
                         </div>
 
-                        <!-- Card actions -->
                         <div
                             class="flex items-center gap-2 border-t border-[#E8EAE2] pt-3.5"
                         >
@@ -342,7 +410,6 @@
                                 </svg>
                                 Edit
                             </Link>
-                            <!-- Opens the confirm dialog; actual delete is Milestone 1.4 -->
                             <button
                                 type="button"
                                 class="flex size-10 flex-none items-center justify-center rounded-[10px] border border-[#E8EAE2] bg-white transition-colors hover:bg-stone"
@@ -368,10 +435,34 @@
                     </div>
                 </article>
             </div>
+
+            <nav
+                v-if="offers.meta.last_page > 1"
+                class="mt-6 flex items-center justify-center gap-1.5"
+                aria-label="Pagination"
+            >
+                <template v-for="(link, i) in offers.meta.links" :key="i">
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        preserve-scroll
+                        class="inline-flex min-w-9 items-center justify-center rounded-[10px] border px-3 py-2 text-[13px] font-bold no-underline transition-colors"
+                        :class="
+                            link.active
+                                ? 'border-lime-dark bg-lime text-ink'
+                                : 'border-[#E8EAE2] bg-white text-ink hover:bg-stone'
+                        "
+                        v-html="link.label"
+                    />
+                    <span
+                        v-else
+                        class="inline-flex min-w-9 items-center justify-center px-3 py-2 text-[13px] font-semibold text-[#9AA08E]"
+                        v-html="link.label"
+                    />
+                </template>
+            </nav>
         </div>
 
-        <!-- DELETE CONFIRMATION — reusable dialog. `deleteTarget !== null` drives
-             open; @update:open closes it (cancel/Esc/backdrop); @confirm deletes. -->
         <ConfirmDialog
             :open="deleteTarget !== null"
             title="Delete this offer?"
@@ -409,34 +500,91 @@
 
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import OfferController from '@/actions/App/Http/Controllers/OfferController';
-import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
 import { create as createRoute } from '@/routes/offers/index';
 import type { OfferListItem } from '@/types/offer';
+import type { Paginated } from '@/types/pagination';
 
-// Typed with the hand-written list shape. `OfferListItem` lives in
-// resources/js/types/offer/index.ts and mirrors App\Http\Resources\OfferListItemResource
-// (its enum fields import from @/types/enums).
-//   Concept: defineProps<T>() is Vue's compile-time prop typing — T describes
-//   the props the controller passes (here, `offers`).
-// TODO(you) [Milestone 1.3]: when index() switches to pagination this becomes a
-// paginated wrapper (e.g. { data: OfferListItem[]; meta: … }) rather than a
-// plain array — type that wrapper here when you get there.
-defineProps<{
-    offers: OfferListItem[];
+const props = defineProps<{
+    offers: Paginated<OfferListItem>;
+    filters: App.Data.Filters.OfferFilterData;
 }>();
 
-// Status → pill colours. Presentational config (keyed by the OfferStatus
-// enum's string values) — leave as-is.
+const statusTabs: { label: string; value: App.Enums.OfferStatus | null }[] = [
+    { label: 'All', value: null },
+    { label: 'On sale', value: 'on_sale' },
+    { label: 'Draft', value: 'draft' },
+    { label: 'Closed', value: 'closed' },
+];
+
+const sortOptions: { label: string; value: App.Enums.OfferSortOption }[] = [
+    { label: 'Newest', value: 'newest' },
+    { label: 'Oldest', value: 'oldest' },
+    { label: 'Price: low to high', value: 'price_asc' },
+    { label: 'Price: high to low', value: 'price_desc' },
+];
+
+const search = ref<string>(props.filters.search ?? '');
+const sort = ref<App.Enums.OfferSortOption>(props.filters.sort ?? 'newest');
+
+const hasActiveFilters = computed<boolean>(
+    () =>
+        props.filters.status !== null ||
+        (props.filters.search ?? '') !== '' ||
+        props.filters.price_min !== null ||
+        props.filters.price_max !== null ||
+        props.filters.product_id !== null ||
+        props.filters.region !== null,
+);
+
+// TODO(you): build a shared params object from the current bar state, mirroring
+// App.Data.Filters.OfferFilterData (omit null/empty keys). Every handler below
+// uses this then does a partial Inertia visit:
+//   router.get(OfferController.index().url, params, { preserveState: true,
+//       preserveScroll: true, replace: true })
+// Hint: start from { status, search, sort } and drop empty values before sending.
+function buildParams(): Record<string, string> {
+    // TODO(you): assemble & return the query params (mirror the DTO fields).
+    return {};
+}
+
+// TODO(you): switch the status tab. `value` is an OfferStatus or null (the "All"
+// tab). Update intent + visit. Hint: set the param (or omit it when null), then
+// router.get(...) as above.
+function applyStatus(value: App.Enums.OfferStatus | null) {
+    void value;
+    // TODO(you): visit with the new status.
+}
+
+// TODO(you): debounce this — fire the visit ~300ms AFTER the user stops typing,
+// not on every keystroke. Hint: keep a timeout id in a module-level `let`,
+// clearTimeout on each call, setTimeout the router.get. `search` (the ref) holds
+// the current text.
+function onSearchInput() {
+    // TODO(you): debounced router.get with buildParams().
+}
+
+// TODO(you): apply the sort dropdown. `sort` (the ref) holds the chosen
+// OfferSortOption. Hint: router.get(...) with buildParams(), no debounce needed.
+function applySort() {
+    // TODO(you): visit with the new sort.
+}
+
+// TODO(you): clear every filter — visit the index with NO params so the server
+// returns the full (base-scoped) list. Hint: router.get(OfferController.index().url).
+function clearFilters() {
+    // TODO(you): reset local refs + visit with empty params.
+}
+
 const statusStyles: Record<string, { chip: string; dot: string }> = {
     on_sale: { chip: 'bg-lime-pale text-[#3F5610]', dot: 'bg-[#7AB82A]' },
     draft: { chip: 'bg-[#E8EAE2] text-[#5A6150]', dot: 'bg-[#9AA08E]' },
     closed: { chip: 'bg-[#FBE4E3] text-[#B0302F]', dot: 'bg-alert' },
 };
 
-// Lightweight date presentation (e.g. "Jun 1"). Adjust the format if you like.
 function formatDate(value: string | null): string {
     if (!value) {
         return '—';
@@ -448,9 +596,6 @@ function formatDate(value: string | null): string {
     });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Delete flow. `deleteTarget` holds the offer being confirmed (or null =
-// dialog closed) — one ref encodes both "which row" and "is the dialog open".
 const deleteTarget = ref<OfferListItem | null>(null);
 
 function confirmDelete(offer: OfferListItem) {
@@ -461,10 +606,6 @@ function cancelDelete() {
     deleteTarget.value = null;
 }
 
-// router.delete() sends a DELETE visit to the destroy route. The OfferPolicy on
-// the backend enforces owner-only (the UI hiding the button is not the guard);
-// on success the controller redirects to index and Inertia re-renders without
-// the row. onSuccess closes the dialog.
 function performDelete() {
     if (!deleteTarget.value) {
         return;

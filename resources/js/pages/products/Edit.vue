@@ -61,7 +61,7 @@
                 <div class="flex flex-col gap-6 p-7">
                     <div>
                         <Label for="name" :class="labelClass"
-                            >Product name / crop</Label
+                            >Product name</Label
                         >
                         <Input
                             id="name"
@@ -73,14 +73,59 @@
                     </div>
 
                     <div>
-                        <Label for="region" :class="labelClass">Region</Label>
-                        <Input
-                            id="region"
-                            v-model="form.region"
-                            type="text"
+                        <Label for="category_id" :class="labelClass"
+                            >Category
+                            <span class="text-[#9CA395]"
+                                >(narrows the crop search below)</span
+                            ></Label
+                        >
+                        <select
+                            id="category_id"
+                            v-model.number="category"
                             :class="fieldClass"
+                            @change="onCategoryChange"
+                        >
+                            <option :value="null">All categories</option>
+                            <option
+                                v-for="option in categories"
+                                :key="option.id"
+                                :value="option.id"
+                            >
+                                {{ option.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="relative">
+                        <Label for="crop_search" :class="labelClass"
+                            >Crop</Label
+                        >
+                        <input
+                            id="crop_search"
+                            v-model="cropQuery"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="Search crops…"
+                            :class="fieldClass"
+                            @input="onCropQueryInput"
+                            @focus="onCropFocus"
+                            @blur="onCropBlur"
                         />
-                        <InputError :message="form.errors.region" />
+                        <div
+                            v-if="cropOptions.length > 0"
+                            class="absolute top-[calc(100%+4px)] right-0 left-0 z-10 max-h-[210px] overflow-y-auto rounded-xl border border-[#E8EAE2] bg-white shadow-[0_10px_24px_rgba(15,21,16,0.12)]"
+                        >
+                            <div
+                                v-for="option in cropOptions"
+                                :key="option.id"
+                                class="cursor-pointer px-4 py-2.5 text-sm font-semibold text-ink hover:bg-stone"
+                                @mousedown.prevent
+                                @click="selectCrop(option)"
+                            >
+                                {{ option.name }}
+                            </div>
+                        </div>
+                        <InputError :message="form.errors.crop_id" />
                     </div>
 
                     <div>
@@ -178,14 +223,18 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import CropController from '@/actions/App/Http/Controllers/CropController';
 import ProductController from '@/actions/App/Http/Controllers/ProductController';
-import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
 import InputError from '@/components/InputError.vue';
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
+import { fetchJson } from '@/lib/utils';
+import type { Category } from '@/types/category';
+import type { Crop } from '@/types/crop';
 import type { Product } from '@/types/product';
 
 const labelClass = 'mb-1.5 block text-[13px] font-bold';
@@ -194,19 +243,102 @@ const fieldClass =
 
 const props = defineProps<{
     product: Product;
+    categories: Category[];
 }>();
 
 interface ProductForm {
     name: string;
-    region: string;
+    crop_id: number | null;
     notes: string | null;
 }
 
 const form = useForm<ProductForm>({
     name: props.product.name,
-    region: props.product.region,
+    crop_id: props.product.crop.id,
     notes: props.product.notes,
 });
+
+// `category` only narrows the crop search below — it isn't submitted, the
+// product only stores crop_id. Pre-filled from the product's current crop.
+const category = ref<number | null>(props.product.crop.category.id);
+const cropQuery = ref(props.product.crop.name);
+const cropOptions = ref<Crop[]>([]);
+let searchToken = 0;
+let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+async function searchCrops(
+    categoryId: number | null,
+    term: string,
+): Promise<Crop[]> {
+    const url = CropController.index.url({
+        query: {
+            category_id: categoryId,
+            query: term,
+        },
+    });
+
+    const response = await fetchJson<Crop[] | null>(url);
+
+    if (!response) {
+        return [];
+    }
+
+    return response;
+}
+
+async function runSearch(term: string = cropQuery.value) {
+    const token = ++searchToken;
+    const results = await searchCrops(category.value, term);
+
+    if (token === searchToken) {
+        cropOptions.value = results;
+    }
+}
+
+function selectCrop(option: Crop) {
+    form.crop_id = option.id;
+    cropQuery.value = option.name;
+    cropOptions.value = [];
+    category.value = option.category.id;
+}
+
+function clearCrop() {
+    form.crop_id = null;
+    cropQuery.value = '';
+}
+
+async function onCategoryChange() {
+    clearCrop();
+    await runSearch();
+}
+
+function onCropQueryInput() {
+    // The text no longer matches the previously picked crop the moment the
+    // user types — invalidate it now, don't wait for the debounced search.
+    form.crop_id = null;
+
+    if (debounceTimer !== undefined) {
+        clearTimeout(debounceTimer);
+    }
+
+    debounceTimer = setTimeout(() => {
+        debounceTimer = undefined;
+        void runSearch();
+    }, 300);
+}
+
+async function onCropFocus() {
+    // Empty term, not the leftover text from an already-selected crop —
+    // otherwise re-focusing a filled-in field only shows close matches to
+    // the current value instead of the full category list.
+    await runSearch('');
+}
+
+// mousedown.prevent on each option (template) stops it from blurring the
+// input before its click fires, so this can close unconditionally.
+function onCropBlur() {
+    cropOptions.value = [];
+}
 
 function submit() {
     form.put(ProductController.update(props.product.id).url);

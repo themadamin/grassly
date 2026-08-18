@@ -14,12 +14,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property int $user_id
  * @property string $name
- * @property string $region
+ * @property int $crop_id
  * @property string|null $notes
  * @property int|null $offers_count
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  * @property-read User $farmer
+ * @property-read Crop $crop
  */
 class Product extends Model
 {
@@ -34,7 +35,7 @@ class Product extends Model
     protected $fillable = [
         'user_id',
         'name',
-        'region',
+        'crop_id',
         'notes',
     ];
 
@@ -46,6 +47,17 @@ class Product extends Model
     public function farmer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * The seeded crop this product is listed under (closed list — see
+     * CropSeeder). Category is reached via `$product->crop->category`.
+     *
+     * @return BelongsTo<Crop, $this>
+     */
+    public function crop(): BelongsTo
+    {
+        return $this->belongsTo(Crop::class);
     }
 
     /**

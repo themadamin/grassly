@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Lean Product payload for the Storage index list. Matching TS shape:
- * resources/js/types/product (`ProductListItem`).
+ * resources/js/types/product (`ProductListItem`). Needs `crop.category` loaded.
  *
  * @property-read Product $resource
  */
@@ -24,7 +24,7 @@ class ProductListItemResource extends JsonResource
         return [
             'id' => $product->id,
             'name' => $product->name,
-            'region' => $product->region,
+            'crop' => CropResource::make($product->crop),
             'notes' => $product->notes,
             // 0 unless the query loaded the count (withCount('offers')).
             'offers_count' => (int) ($product->offers_count ?? 0),

@@ -40,7 +40,9 @@ class StoreOfferRequest extends FormRequest
             'total_quantity' => ['required', 'integer', 'min:1'],
             'unit' => ['required', Rule::in(['kg', 'ton'])],
             'price' => ['required', 'numeric', 'min:0', 'max:'.$currency->maxMajorUnits(), 'decimal:0,'.$currency->decimals()],
-            'region' => ['required', 'string'],
+            // Deliverable zones — a closed list (RegionSeeder), at least one.
+            'region_ids' => ['required', 'array', 'min:1'],
+            'region_ids.*' => ['integer', Rule::exists('regions', 'id')],
             'available_from' => ['required', 'date', 'after_or_equal:today'],
             'available_to' => ['nullable', 'date', 'after:available_from'],
             'description' => ['nullable', 'string'],

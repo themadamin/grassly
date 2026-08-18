@@ -33,7 +33,8 @@ class UpdateOfferRequest extends FormRequest
             'total_quantity' => ['required', 'integer', 'min:1'],
             'unit' => ['required', Rule::in(['kg', 'ton'])],
             'price' => ['required', 'numeric', 'min:0', 'max:'.$currency->maxMajorUnits(), 'decimal:0,'.$currency->decimals()],
-            'region' => ['required', 'string'],
+            'region_ids' => ['required', 'array', 'min:1'],
+            'region_ids.*' => ['integer', Rule::exists('regions', 'id')],
             // NOTE: unlike StoreOfferRequest, `after_or_equal:today` is left OFF
             // available_from — editing an offer whose start is already past would
             // otherwise always fail.

@@ -15,10 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name');
-            $table->string('region');
+            $table->foreignId('crop_id')->constrained()->cascadeOnDelete();
             $table->text('notes')->nullable();
             $table->timestamps();
-            // Soft delete so an offer's referenced product isn't vaporized.
             $table->softDeletes();
         });
     }

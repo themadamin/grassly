@@ -17,6 +17,12 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RoleSeeder::class);
 
+        // CropSeeder depends on categories already existing — order matters.
+        $this->call(CategorySeeder::class);
+        $this->call(CropSeeder::class);
+
+        $this->call(RegionSeeder::class);
+
         // User::factory(10)->create();
 
         User::factory()->create([

@@ -79,16 +79,6 @@
                                 <div
                                     class="mb-1.5 text-xs font-bold tracking-[0.04em] text-[#6B7260] uppercase"
                                 >
-                                    Region
-                                </div>
-                                <div class="text-lg font-bold">
-                                    {{ product.region }}
-                                </div>
-                            </div>
-                            <div>
-                                <div
-                                    class="mb-1.5 text-xs font-bold tracking-[0.04em] text-[#6B7260] uppercase"
-                                >
                                     Offers
                                 </div>
                                 <div class="text-lg font-bold">
@@ -122,9 +112,6 @@
                         <div class="min-w-0 flex-1">
                             <div class="text-[17px] font-extrabold">
                                 {{ product.farmer?.name ?? 'Unknown farmer' }}
-                            </div>
-                            <div class="mt-0.5 text-[13px] text-[#6B7260]">
-                                {{ product.region }}
                             </div>
                         </div>
                     </div>
@@ -249,7 +236,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import OfferController from '@/actions/App/Http/Controllers/OfferController';
 import ProductController from '@/actions/App/Http/Controllers/ProductController';
-import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import { useInitials } from '@/composables/useInitials';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
 import type { Product } from '@/types/product';

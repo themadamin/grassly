@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CropController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemandController;
 use App\Http\Controllers\MarketController;
@@ -16,8 +17,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Shared Market browse — both roles land here (segmented Selling/Buying/All).
     Route::get('/market', MarketController::class)->name('market');
+    // Crop typeahead — shared by the product-create crop picker and the Market
+    // filter panel's crop field.
+    Route::get('/crops', [CropController::class, 'index'])->name('crops.index');
+    // Offer detail is shared (a merchant can view an offer they're browsing);
+    // the offers INDEX is the farmer's own listings, so it's farmer-gated below.
     Route::resource('offers', OfferController::class)
-        ->only(['index', 'show'])
+        ->only(['show'])
         ->whereNumber('offer');
     Route::resource('products', ProductController::class)
         ->only(['index', 'show'])
@@ -45,7 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:farmer')->group(function () {
         Route::inertia('/farmer/dashboard', 'dashboard/Farmer')->name('farmer.dashboard');
         Route::resource('offers', OfferController::class)
-            ->only(['create', 'store', 'edit', 'update', 'destroy'])
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
             ->whereNumber('offer');
         Route::resource('products', ProductController::class)
             ->only(['create', 'store', 'edit', 'update', 'destroy'])

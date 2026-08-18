@@ -2,8 +2,6 @@
     <Head title="Market" />
 
     <GrasslyAppLayout title="Market">
-        <!-- Role-view pill in the top bar (design frames 13–15). Farmers and
-             merchants share this page; the pill just signals whose view it is. -->
         <template #actions>
             <span
                 class="inline-flex items-center gap-1.5 rounded-full px-3 py-[5px] text-xs font-bold"
@@ -18,7 +16,6 @@
         </template>
 
         <div class="flex min-h-full flex-col p-7">
-            <!-- SEGMENTED TABS (All / Selling / Buying) -->
             <div class="mb-5 flex items-center justify-between">
                 <div
                     class="inline-flex gap-1 rounded-[14px] border border-[#E8EAE2] bg-white p-[5px]"
@@ -47,9 +44,6 @@
                 </div>
             </div>
 
-            <!-- ============================================================ -->
-            <!-- BUYING TAB — Demands are Phase 4, so show a coming-soon state -->
-            <!-- ============================================================ -->
             <div
                 v-if="tab === 'buying'"
                 class="flex min-h-[480px] flex-1 items-center justify-center"
@@ -144,124 +138,292 @@
                 </div>
             </div>
 
-            <!-- ============================================================ -->
-            <!-- SELLING / ALL TABS — toolbar + results (or no-results state)  -->
-            <!-- ============================================================ -->
             <template v-else>
-                <!-- TOOLBAR: search + crop/region/availability selects.
-                     Server-driven filters — the SHAPE is here; wiring is yours
-                     (see the <script setup> TODOs). -->
-                <div class="mb-[14px] flex flex-wrap items-center gap-3">
-                    <div class="relative min-w-[240px] flex-1">
-                        <svg
-                            class="absolute top-1/2 left-3.5 -translate-y-1/2"
-                            width="17"
-                            height="17"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#6B7260"
-                            stroke-width="2.2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                <div class="relative mb-[22px]">
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <div
+                            class="relative min-w-[200px] flex-1 basis-[260px]"
                         >
-                            <circle cx="11" cy="11" r="7" />
-                            <path d="M21 21 L16.5 16.5" />
-                        </svg>
-                        <!-- TODO(you): replace :value with v-model on a reactive
-                             filter ref, then debounce applyFilters(). -->
-                        <input
-                            type="search"
-                            placeholder="Search offers by crop, farmer, region…"
-                            :value="filters.search ?? ''"
-                            class="w-full rounded-xl border border-[#E8EAE2] bg-white py-[11px] pr-3.5 pl-10 text-sm font-medium text-ink outline-none placeholder:text-[#6B7260]"
-                            @input="applyFilters"
-                        />
+                            <svg
+                                class="absolute top-1/2 left-3.5 -translate-y-1/2"
+                                width="17"
+                                height="17"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#6B7260"
+                                stroke-width="2.2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <circle cx="11" cy="11" r="7" />
+                                <path d="M21 21 L16.5 16.5" />
+                            </svg>
+                            <input
+                                v-model="search"
+                                type="search"
+                                placeholder="Search offers, crops, descriptions…"
+                                class="w-full rounded-xl border border-[#E8EAE2] bg-white py-[11px] pr-3.5 pl-10 text-sm font-medium text-ink outline-none placeholder:text-[#6B7260]"
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            class="relative flex size-11 flex-none cursor-pointer items-center justify-center rounded-xl bg-white"
+                            :class="filterButtonClass"
+                            @click="togglePanel"
+                        >
+                            <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#0F1510"
+                                stroke-width="2.1"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M4 5 H20 L14 13 V19 L10 21 V13 Z" />
+                            </svg>
+                            <span
+                                v-if="stagedFilterCount > 0"
+                                class="absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-stone bg-lime px-1 text-[11px] font-extrabold text-ink"
+                            >
+                                {{ stagedFilterCount }}
+                            </span>
+                        </button>
+
+                        <div class="relative flex-none">
+                            <select
+                                v-model="sort"
+                                class="cursor-pointer appearance-none rounded-xl border border-[#E8EAE2] bg-white py-[11px] pr-9 pl-[15px] text-[13px] font-bold text-ink outline-none"
+                            >
+                                <option
+                                    v-for="option in sortOptions"
+                                    :key="option.value"
+                                    :value="option.value"
+                                >
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                            <svg
+                                class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#6B7260"
+                                stroke-width="2.4"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M6 9 L12 15 L18 9" />
+                            </svg>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="flex-none cursor-pointer rounded-xl bg-lime px-[22px] py-[11px] text-[13px] font-extrabold text-ink"
+                            @click="applyFilters"
+                        >
+                            Apply
+                        </button>
                     </div>
 
-                    <!-- Crop -->
-                    <div class="relative">
-                        <select
-                            :value="filters.crop ?? ''"
-                            class="cursor-pointer appearance-none rounded-xl border border-[#E8EAE2] bg-white py-[11px] pr-9 pl-[15px] text-[13px] font-bold text-ink outline-none"
-                            @change="applyFilters"
+                    <div
+                        v-if="panelOpen"
+                        class="fixed inset-0 z-40"
+                        @click="closePanel"
+                    ></div>
+                    <div
+                        v-if="panelOpen"
+                        class="absolute top-[calc(100%+10px)] left-0 z-50 w-[440px] rounded-[18px] border border-[#E8EAE2] bg-white p-5 shadow-[0_18px_40px_rgba(15,21,16,0.14)]"
+                    >
+                        <div
+                            class="mb-2.5 text-[11px] font-extrabold tracking-[0.1em] text-[#8A9180] uppercase"
                         >
-                            <!-- TODO(you): populate crop options from a prop the
-                                 controller passes (distinct product crops). -->
-                            <option value="">Any crop</option>
-                            <option>Produce</option>
-                            <option>Grain</option>
-                            <option>Fruit</option>
-                        </select>
-                        <svg
-                            class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#6B7260"
-                            stroke-width="2.4"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M6 9 L12 15 L18 9" />
-                        </svg>
-                    </div>
+                            Category
+                        </div>
+                        <div class="mb-5 flex flex-wrap gap-2">
+                            <button
+                                v-for="option in categoryOptions"
+                                :key="option.id ?? 'all'"
+                                type="button"
+                                class="cursor-pointer rounded-full px-4 py-2 text-[13px] font-bold whitespace-nowrap"
+                                :class="categoryChipClass(option.id)"
+                                @click="selectCategory(option.id)"
+                            >
+                                {{ option.name }}
+                            </button>
+                        </div>
 
-                    <!-- Region -->
-                    <div class="relative">
-                        <select
-                            :value="filters.region ?? ''"
-                            class="cursor-pointer appearance-none rounded-xl border border-[#E8EAE2] bg-white py-[11px] pr-9 pl-[15px] text-[13px] font-bold text-ink outline-none"
-                            @change="applyFilters"
+                        <div
+                            class="mb-2.5 text-[11px] font-extrabold tracking-[0.1em] text-[#8A9180] uppercase"
                         >
-                            <!-- TODO(you): populate region options from a prop. -->
-                            <option value="">Any region</option>
-                            <option>Riverside Valley</option>
-                            <option>Hillside Plots</option>
-                        </select>
-                        <svg
-                            class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#6B7260"
-                            stroke-width="2.4"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            Crop
+                        </div>
+                        <div class="relative mb-2.5">
+                            <input
+                                v-model="cropQuery"
+                                type="text"
+                                placeholder="Type to filter crops…"
+                                class="w-full rounded-[10px] border border-[#E8EAE2] bg-white px-[13px] py-2.5 text-[13px] font-medium text-ink outline-none"
+                                @input="onCropQueryInput"
+                            />
+                            <div
+                                v-if="cropOptions.length > 0"
+                                class="absolute top-[calc(100%+4px)] right-0 left-0 z-10 overflow-hidden rounded-[10px] border border-[#E8EAE2] bg-white shadow-[0_10px_24px_rgba(15,21,16,0.12)]"
+                            >
+                                <div
+                                    v-for="option in cropOptions"
+                                    :key="option.id"
+                                    class="cursor-pointer px-[13px] py-2.5 text-[13px] font-semibold text-ink hover:bg-stone"
+                                    @click="selectCrop(option)"
+                                >
+                                    {{ option.name }}
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            v-if="selectedCropName"
+                            class="mb-5 flex flex-wrap gap-1.5"
                         >
-                            <path d="M6 9 L12 15 L18 9" />
-                        </svg>
-                    </div>
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full bg-lime-pale py-[5px] pr-2 pl-3 text-xs font-bold text-[#3F5610]"
+                            >
+                                {{ selectedCropName }}
+                                <svg
+                                    class="cursor-pointer"
+                                    width="11"
+                                    height="11"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="#3F5610"
+                                    stroke-width="2.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    @click="clearCrop"
+                                >
+                                    <path d="M6 6 L18 18" />
+                                    <path d="M18 6 L6 18" />
+                                </svg>
+                            </span>
+                        </div>
 
-                    <!-- Availability -->
-                    <div class="relative">
-                        <select
-                            :value="filters.availability ?? ''"
-                            class="cursor-pointer appearance-none rounded-xl border border-[#E8EAE2] bg-white py-[11px] pr-9 pl-[15px] text-[13px] font-bold text-ink outline-none"
-                            @change="applyFilters"
+                        <div
+                            class="mb-2.5 text-[11px] font-extrabold tracking-[0.1em] text-[#8A9180] uppercase"
                         >
-                            <option value="">Any availability</option>
-                            <option>Available now</option>
-                            <option>Upcoming</option>
-                        </select>
-                        <svg
-                            class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#6B7260"
-                            stroke-width="2.4"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            Region
+                        </div>
+                        <div class="mb-5 flex flex-wrap gap-2">
+                            <button
+                                v-for="option in regionOptions"
+                                :key="option.id ?? 'all'"
+                                type="button"
+                                class="cursor-pointer rounded-full px-4 py-2 text-[13px] font-bold whitespace-nowrap"
+                                :class="regionChipClass(option.id)"
+                                @click="selectRegion(option.id)"
+                            >
+                                {{ option.name }}
+                            </button>
+                        </div>
+
+                        <div
+                            class="mb-2.5 text-[11px] font-extrabold tracking-[0.1em] text-[#8A9180] uppercase"
                         >
-                            <path d="M6 9 L12 15 L18 9" />
-                        </svg>
+                            Availability
+                        </div>
+                        <div
+                            class="mb-5 inline-flex gap-1 rounded-xl bg-stone p-1"
+                        >
+                            <button
+                                type="button"
+                                class="cursor-pointer rounded-[10px] px-4 py-[9px] text-[13px] font-bold"
+                                :class="availabilityChipClass('available_now')"
+                                @click="setAvailability('available_now')"
+                            >
+                                Available now
+                            </button>
+                            <button
+                                type="button"
+                                class="cursor-pointer rounded-[10px] px-4 py-[9px] text-[13px] font-bold"
+                                :class="availabilityChipClass(null)"
+                                @click="setAvailability(null)"
+                            >
+                                Any
+                            </button>
+                        </div>
+
+                        <div
+                            class="mb-2.5 text-[11px] font-extrabold tracking-[0.1em] text-[#8A9180] uppercase"
+                        >
+                            Date range
+                        </div>
+                        <div class="mb-5 flex items-center gap-2">
+                            <input
+                                v-model="dateFrom"
+                                type="date"
+                                class="flex-1 rounded-[10px] border border-[#E8EAE2] bg-white px-[11px] py-2.5 text-[13px] font-medium text-ink outline-none"
+                            />
+                            <span class="text-xs font-bold text-[#8A9180]"
+                                >to</span
+                            >
+                            <input
+                                v-model="dateTo"
+                                type="date"
+                                class="flex-1 rounded-[10px] border border-[#E8EAE2] bg-white px-[11px] py-2.5 text-[13px] font-medium text-ink outline-none"
+                            />
+                        </div>
+
+                        <div
+                            class="mb-2.5 text-[11px] font-extrabold tracking-[0.1em] text-[#8A9180] uppercase"
+                        >
+                            Price range
+                        </div>
+                        <div class="mb-5 flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <span
+                                    class="absolute top-1/2 left-[11px] -translate-y-1/2 text-[13px] font-bold text-[#8A9180]"
+                                    >$</span
+                                >
+                                <MoneyInput
+                                    v-model="priceMin"
+                                    placeholder="Min"
+                                    class="w-full rounded-[10px] border border-[#E8EAE2] bg-white py-2.5 pr-[11px] pl-6 text-[13px] font-medium text-ink outline-none"
+                                />
+                            </div>
+                            <span class="text-xs font-bold text-[#8A9180]"
+                                >to</span
+                            >
+                            <div class="relative flex-1">
+                                <span
+                                    class="absolute top-1/2 left-[11px] -translate-y-1/2 text-[13px] font-bold text-[#8A9180]"
+                                    >$</span
+                                >
+                                <MoneyInput
+                                    v-model="priceMax"
+                                    placeholder="Max"
+                                    class="w-full rounded-[10px] border border-[#E8EAE2] bg-white py-2.5 pr-[11px] pl-6 text-[13px] font-medium text-ink outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div
+                            class="flex items-center justify-between border-t border-[#E8EAE2] pt-1.5"
+                        >
+                            <button
+                                type="button"
+                                class="cursor-pointer text-xs font-bold text-[#6B7260] underline"
+                                @click="clearPanelFilters"
+                            >
+                                Clear all
+                            </button>
+                            <span class="text-xs text-[#8A9180]"
+                                >Apply to commit changes</span
+                            >
+                        </div>
                     </div>
                 </div>
 
-                <!-- ACTIVE FILTER CHIPS (only when a filter is set) -->
                 <div
                     v-if="hasActiveFilters"
                     class="mb-6 flex flex-wrap items-center gap-2"
@@ -302,22 +464,20 @@
                     </button>
                 </div>
 
-                <!-- RESULTS GRID -->
-                <template v-if="offers.length > 0">
+                <template v-if="offers.data.length > 0">
                     <div class="mb-4 text-sm font-bold">
-                        {{ offers.length }}
-                        {{ offers.length === 1 ? 'offer' : 'offers' }}
+                        {{ offers.meta.total }}
+                        {{ offers.meta.total === 1 ? 'offer' : 'offers' }}
                     </div>
 
                     <div
                         class="grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-5"
                     >
                         <article
-                            v-for="offer in offers"
+                            v-for="offer in offers.data"
                             :key="offer.id"
                             class="overflow-hidden rounded-[20px] border border-[#E8EAE2] bg-white"
                         >
-                            <!-- Lime header band: SELLING badge + crop category -->
                             <div
                                 class="relative flex h-[62px] items-center justify-between px-[18px]"
                                 style="
@@ -349,7 +509,7 @@
                                 <span
                                     class="text-xs font-extrabold tracking-[0.1em] text-[#3F5610] uppercase"
                                 >
-                                    {{ offer.product.name }}
+                                    {{ offer.product.crop.category.name }}
                                 </span>
                             </div>
 
@@ -359,18 +519,21 @@
                                 >
                                     {{ offer.title }}
                                 </div>
-                                <!-- Farmer · region sub-line.
-                                     TODO(you): the farmer's display name isn't in
+                                <!-- TODO(you): the farmer's display name isn't in
                                      OfferListItemData yet. To show it (design =
                                      "Maria Okonkwo · Riverside Valley"), eager-load
                                      `farmer` in MarketController and add a
                                      `farmer_name` field to OfferListItemResource +
                                      OfferListItemData, then render it here. For now
-                                     only the region is shown. -->
+                                     only the regions are shown. -->
                                 <div
                                     class="mb-[14px] text-[13px] text-[#6B7260]"
                                 >
-                                    {{ offer.region }}
+                                    {{
+                                        offer.regions
+                                            .map((r) => r.name)
+                                            .join(', ')
+                                    }}
                                 </div>
 
                                 <div
@@ -392,10 +555,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Fulfillment progress. reserved = total −
-                                     remaining (Phase 3: 0 until Phase 4 orders
-                                     decrement remaining_quantity). Bar turns amber
-                                     when nearly sold out. -->
                                 <div class="mb-4">
                                     <div
                                         class="mb-1.5 h-1.5 overflow-hidden rounded-full bg-stone"
@@ -422,7 +581,6 @@
                     </div>
                 </template>
 
-                <!-- NO RESULTS (filtered or empty) -->
                 <div
                     v-else
                     class="flex min-h-[400px] flex-1 items-center justify-center"
@@ -473,53 +631,61 @@
 
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import OfferController from '@/actions/App/Http/Controllers/OfferController';
+import MoneyInput from '@/components/shared/MoneyInput.vue';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
 import type { UserRole } from '@/types/auth';
+import type { Category } from '@/types/category';
+import type { Crop } from '@/types/crop';
 import type { OfferListItem } from '@/types/offer';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PROPS — the shapes MarketController's __invoke() echoes back. `offers` is the
-// hand-written list shape `OfferListItem` (resources/js/types/offer/index.ts,
-// mirrors App\Http\Resources\OfferListItemResource). `tab`/`filters` mirror the
-// controller's query state so the Market stays SERVER-driven.
-//
-// TODO(you): if you change the controller payload (e.g. add crop/region option
-// lists, or a farmer_name field), refine these types to match.
-type MarketTab = 'all' | 'selling' | 'buying';
-type MarketFilters = {
-    search: string | null;
-    crop: string | null;
-    region: string | null;
-    availability: string | null;
-};
+import type { Paginated } from '@/types/pagination';
+import type { Region } from '@/types/region';
 
 const props = withDefaults(
     defineProps<{
-        offers?: OfferListItem[];
-        tab?: MarketTab;
-        filters?: MarketFilters;
+        offers?: Paginated<OfferListItem>;
+        tab?: App.Enums.MarketTab;
+        filters?: App.Data.Filters.MarketFilterData;
+        categories?: Category[];
+        regions?: Region[];
     }>(),
     {
-        offers: () => [],
+        offers: () => ({
+            data: [],
+            links: { first: null, last: null, prev: null, next: null },
+            meta: {
+                current_page: 1,
+                from: null,
+                last_page: 1,
+                links: [],
+                path: '',
+                per_page: 20,
+                to: null,
+                total: 0,
+            },
+        }),
         tab: 'selling',
         filters: () => ({
             search: null,
+            category: null,
             crop: null,
             region: null,
             availability: null,
+            date_from: null,
+            date_to: null,
+            price_min: null,
+            price_max: null,
+            sort: null,
         }),
+        categories: () => [],
+        regions: () => [],
     },
 );
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PRESENTATIONAL HELPERS (styling/formatting — safe to keep as-is).
 
 const page = usePage();
 const role = computed<UserRole>(() => page.props.auth.role ?? 'farmer');
 
-// Top-bar "Farmer view" / "Merchant view" pill.
 const rolePill = computed(() =>
     role.value === 'merchant'
         ? {
@@ -534,8 +700,7 @@ const rolePill = computed(() =>
           },
 );
 
-// Segmented-tab styling keyed off the active `tab` prop.
-function tabClass(key: MarketTab): string {
+function tabClass(key: App.Enums.MarketTab): string {
     const base =
         'cursor-pointer rounded-[10px] px-5 py-[9px] text-sm font-bold transition-colors';
 
@@ -570,25 +735,212 @@ function reservedLabel(offer: OfferListItem): string {
     return `${reserved} ${offer.unit} reserved · ${offer.remaining_quantity} ${offer.unit} left`;
 }
 
-// Active filter chips, derived from the echoed filter values.
+// TODO(you): none of this re-syncs itself after a partial reload swaps
+// `props.filters` for a new value (e.g. after Apply, or after removing a
+// chip) — Vue doesn't do that for you once a prop's initial value has been
+// copied into a ref. Once applyFilters()/removeFilter()/clearFilters() below
+// actually visit the server, add a `watch(() => props.filters, (f) => {
+// ...reset every ref here... })` or these controls will silently drift from
+// what's really applied.
+
+const panelOpen = ref(false);
+
+function togglePanel() {
+    panelOpen.value = !panelOpen.value;
+}
+
+function closePanel() {
+    panelOpen.value = false;
+}
+
+const search = ref<string>(props.filters.search ?? '');
+const sort = ref<App.Enums.MarketSortOption>(props.filters.sort ?? 'newest');
+
+const sortOptions: { label: string; value: App.Enums.MarketSortOption }[] = [
+    { label: 'Newest', value: 'newest' },
+    { label: 'Oldest', value: 'oldest' },
+    { label: 'Price low→high', value: 'price_asc' },
+    { label: 'Price high→low', value: 'price_desc' },
+    { label: 'Quantity', value: 'quantity' },
+];
+
+const category = ref<number | null>(props.filters.category);
+
+const categoryOptions = computed(() => [
+    { id: null as number | null, name: 'All' },
+    ...props.categories,
+]);
+
+function categoryChipClass(id: number | null): string {
+    return id === category.value
+        ? 'bg-lime text-ink'
+        : 'bg-stone text-[#5A6150]';
+}
+
+function selectCategory(id: number | null) {
+    category.value = id;
+}
+
+const crop = ref<number | null>(props.filters.crop);
+const selectedCropName = ref<string | null>(null);
+const cropQuery = ref('');
+const cropOptions = ref<Crop[]>([]);
+
+function selectCrop(option: Crop) {
+    crop.value = option.id;
+    selectedCropName.value = option.name;
+    cropQuery.value = '';
+    cropOptions.value = [];
+}
+
+function clearCrop() {
+    crop.value = null;
+    selectedCropName.value = null;
+}
+
+// TODO(you): debounce this the same way you'll debounce the search box
+// elsewhere, then GET /crops — the route helper is `index` from
+// '@/routes/crops', e.g. `index({ query: { q: cropQuery.value, category:
+// category.value } }).url`. Fetch it (this is a plain JSON endpoint, not an
+// Inertia page — use `fetch()`, not `router.get()`) and set
+// cropOptions.value to the parsed results.
+// Concept: fetch() hits a JSON endpoint from client code; router.get() instead
+// navigates/re-renders an Inertia page — different tools for different jobs.
+function onCropQueryInput() {
+    // TODO(you)
+}
+
+const region = ref<number | null>(props.filters.region);
+
+const regionOptions = computed(() => [
+    { id: null as number | null, name: 'All' },
+    ...props.regions,
+]);
+
+function regionChipClass(id: number | null): string {
+    return id === region.value
+        ? 'bg-lime text-ink'
+        : 'bg-stone text-[#5A6150]';
+}
+
+function selectRegion(id: number | null) {
+    region.value = id;
+}
+
+const availability = ref<string | null>(props.filters.availability);
+
+function availabilityChipClass(value: string | null): string {
+    return value === availability.value
+        ? 'bg-lime text-ink'
+        : 'bg-transparent text-[#5A6150]';
+}
+
+function setAvailability(value: string | null) {
+    availability.value = value;
+}
+
+const dateFrom = ref<string | null>(props.filters.date_from);
+const dateTo = ref<string | null>(props.filters.date_to);
+
+// price_min/price_max come back from the server in minor units (cents);
+// MoneyInput takes major units (dollars), so divide by 100 for display.
+const priceMin = ref<number | null>(
+    props.filters.price_min !== null ? props.filters.price_min / 100 : null,
+);
+const priceMax = ref<number | null>(
+    props.filters.price_max !== null ? props.filters.price_max / 100 : null,
+);
+
+const filterButtonClass = computed(() =>
+    panelOpen.value
+        ? 'border-[1.5px] border-lime'
+        : 'border-[1.5px] border-[#E8EAE2]',
+);
+
+const stagedFilterCount = computed(() => {
+    let count = 0;
+
+    if (category.value !== null) {
+        count++;
+    }
+
+    if (crop.value !== null) {
+        count++;
+    }
+
+    if (region.value) {
+        count++;
+    }
+
+    if (availability.value) {
+        count++;
+    }
+
+    if (dateFrom.value || dateTo.value) {
+        count++;
+    }
+
+    if (priceMin.value !== null || priceMax.value !== null) {
+        count++;
+    }
+
+    return count;
+});
+
+function clearPanelFilters() {
+    category.value = null;
+    crop.value = null;
+    selectedCropName.value = null;
+    cropQuery.value = '';
+    region.value = null;
+    availability.value = null;
+    dateFrom.value = null;
+    dateTo.value = null;
+    priceMin.value = null;
+    priceMax.value = null;
+}
+
+type FilterChipKey =
+    | 'search'
+    | 'category'
+    | 'crop'
+    | 'region'
+    | 'availability'
+    | 'dates'
+    | 'price';
+
 const activeFilterChips = computed(() => {
     const f = props.filters;
-    const chips: { key: keyof MarketFilters; label: string }[] = [];
+    const chips: { key: FilterChipKey; label: string }[] = [];
 
     if (f.search) {
         chips.push({ key: 'search', label: `“${f.search}”` });
     }
 
-    if (f.crop) {
-        chips.push({ key: 'crop', label: f.crop });
+    if (f.category !== null) {
+        const match = props.categories.find((c) => c.id === f.category);
+        chips.push({ key: 'category', label: match?.name ?? 'Category' });
     }
 
-    if (f.region) {
-        chips.push({ key: 'region', label: f.region });
+    if (f.crop !== null) {
+        chips.push({ key: 'crop', label: 'Crop selected' });
+    }
+
+    if (f.region !== null) {
+        const match = props.regions.find((r) => r.id === f.region);
+        chips.push({ key: 'region', label: match?.name ?? 'Region' });
     }
 
     if (f.availability) {
-        chips.push({ key: 'availability', label: f.availability });
+        chips.push({ key: 'availability', label: 'Available now' });
+    }
+
+    if (f.date_from || f.date_to) {
+        chips.push({ key: 'dates', label: 'Date range' });
+    }
+
+    if (f.price_min !== null || f.price_max !== null) {
+        chips.push({ key: 'price', label: 'Price range' });
     }
 
     return chips;
@@ -596,39 +948,40 @@ const activeFilterChips = computed(() => {
 
 const hasActiveFilters = computed(() => activeFilterChips.value.length > 0);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// YOUR LEARNING SURFACE — the server round-trips. The template already wires the
-// @click / :value SHAPES to the functions below; you fill in the bodies.
-//
-// The Market is server-driven: switching tabs or changing filters should ask the
-// controller for new results, NOT filter in the browser. Use an Inertia visit.
-//   Concept — router.get(url, data, options) + PARTIAL RELOAD: passing
-//   `only: ['offers', 'tab', 'filters']` refetches just those props, so the
-//   sidebar and top bar don't re-render. `market` is exported from '@/routes':
-//   `import { market } from '@/routes'`, then `market().url`.
-
-// TODO(you) [Milestone 4.1]: visit the market route with the chosen tab.
+// TODO(you) [Milestone 4.1]: switching tabs should ask the controller for new
+// results via an Inertia visit, not filter in the browser.
 // Hint: router.get(market().url, { tab }, { preserveScroll: true, only: [...] })
-function setTab(tab: MarketTab) {
+// Concept — router.get(url, data, options) + PARTIAL RELOAD: passing
+// `only: ['offers', 'tab', 'filters']` refetches just those props, so the
+// sidebar and top bar don't re-render. `market` is exported from '@/routes':
+// `import { market } from '@/routes'`, then `market().url`.
+function setTab(tab: App.Enums.MarketTab) {
     void tab; // remove once implemented
     // TODO(you)
 }
 
-// TODO(you) [Milestone 4.2]: v-model the search + selects onto a reactive copy of
-// `filters`, then debounce a router.get(market().url, { tab, ...filters }, ...).
-// Concept: watch() the reactive filters + a small debounce so you don't fire a
-// request on every keystroke; request()->query() reads them server-side.
+// TODO(you) [Milestone 4.2]: the big one. Collect every staged ref above
+// (search, sort, category, crop, region, availability, dateFrom, dateTo,
+// priceMin, priceMax) into ONE params object that mirrors
+// App.Data.Filters.MarketFilterData (omit null/empty keys), then
+// router.get(market().url, { tab: props.tab, ...params }, { only: ['offers',
+// 'filters'], preserveState: true, preserveScroll: true, replace: true }).
+// Close the panel too (closePanel()).
 function applyFilters() {
     // TODO(you)
 }
 
-// TODO(you): drop one filter (send the query without that key) then re-visit.
-function removeFilter(key: keyof MarketFilters) {
+// TODO(you): drop one APPLIED filter (from props.filters, not the staged
+// refs above) and re-visit the server without that key — same idea as
+// applyFilters but built from props.filters minus `key`.
+function removeFilter(key: FilterChipKey) {
     void key; // remove once implemented
     // TODO(you)
 }
 
-// TODO(you): clear every filter — visit market().url with just the active tab.
+// TODO(you): clear every applied + staged filter — visit market().url with
+// just the active tab, and reset every ref above (or re-seed them from the
+// response once the visit resolves).
 function clearFilters() {
     // TODO(you)
 }

@@ -13,10 +13,10 @@ see the result, then move on.
 Backend always comes before frontend.
 
 > **Phase 3 = POST + BROWSE only.** Products, Offers (sell campaigns), harvest
-> forecasts, and a Market to browse them. **No transactions.** Orders/claims,
-> partial fulfilment, and the merchant `Demand` (buy-offer) are **Phase 4** —
-> see `docs/phase4-todos.md`. See CLAUDE.md → **Domain model** for the
-> vocabulary and **Data storage practices** for the money/quantity rules.
+> forecasts, a crop taxonomy, and a Market to browse them. **No transactions.**
+> Orders/claims, partial fulfilment, and the merchant `Demand` (buy-offer) are
+> **Phase 4** — see `docs/phase4-todos.md`. See CLAUDE.md → **Domain model** for
+> the vocabulary and **Coding rules** for the money/quantity rules.
 
 ---
 
@@ -210,6 +210,48 @@ clean.
 
 ---
 
+# FEATURE 3.5 — Crop taxonomy (categories + crops), CLOSED list
+
+> Prerequisite for good Market filtering. Replaces the free-text crop on Product
+> with a normalized two-level taxonomy: **Category → Crop**. Seeded, closed
+> (farmers pick a seeded crop; no free-typing). This is what stops the crop
+> filter from being a giant unusable dropdown. Full handoff:
+> `market-filter-backend-prompt.md`.
+
+## Milestone 3.5.1 — Taxonomy tables + seed (👀 backend: rows in DB)
+1. 🤖 Scaffold `make:model Category -ms`, `make:model Crop -ms`.
+2. 🧑 Migrations: `categories` (`name` unique, `slug` unique); `crops`
+   (`category_id` FK cascade, `name`, `slug` unique).
+   *Concept: two-level lookup taxonomy — Category hasMany Crop.*
+3. 🧑 Models + relations (`Category hasMany Crop`; `Crop belongsTo Category`,
+   `Crop hasMany Product`).
+4. 🤖 Seeders: ~10 categories + a solid starter crop list per category
+   (FAO/USDA-based), idempotent (`updateOrCreate` on slug), wired into
+   `DatabaseSeeder`. (Reference data — Claude writes, you review.)
+5. 🧑 **See it:** seed, confirm categories + crops in the DB. 👀
+
+## Milestone 3.5.2 — Refactor Product → crop_id (👀 backend)
+6. 🧑 Migration: replace free-text crop on `products` with `crop_id` FK (edit the
+   existing products migration — no real data yet).
+   *Concept: normalizing a string into an FK so everyone's "tomato" matches.*
+7. 🧑 Product model: `crop()` `belongsTo(Crop)`; category via `crop->category`.
+8. 🧑 Validation: `crop_id` required + `Rule::exists('crops','id')`.
+9. 🧑 Update `ProductData`/`ProductResource` (+ offer ones) to expose crop +
+   category; regenerate TS types.
+10. 🧑 **See it:** create a product picking a seeded crop; crop + category resolve. 👀
+
+## Milestone 3.5.3 — Crop search endpoint (👀 backend: JSON)
+11. 🤖 Scaffold `GET /crops` → `CropController@index`.
+12. 🧑 Query: filter by `category` (optional) + `q` (partial name match), capped
+    list of id+name. *Concept: a JSON endpoint the typeahead hits as you type —
+    keeps the full crop list off the client.*
+13. 🧑 **See it:** `/crops?category=vegetables&q=tom` returns Tomato. 👀
+
+✅ **Feature 3.5 done** when Product references a seeded Crop, the category/crop
+relationship resolves, and the crop-search endpoint returns scoped matches.
+
+---
+
 # FEATURE 4 — Market / Browse + search (do last — needs data to browse)
 
 > The shared browse experience. Phase 3 surfaces **Offers** (sell campaigns);
@@ -227,30 +269,59 @@ clean.
 3. 🧑 `<script setup>`: typed props per tab, tab state.
 4. 🧑 **See it:** one page browsing public offers. 👀
 
-## Milestone 4.2 — Server-driven search & filters (👀 frontend)
-5. 🧑 Filters (crop, region, availability) from `request()->query()`, applied in
-   the controller — **server-side**, not client-side.
-6. 🤖 Filter controls in the `<template>`.
-7. 🧑 Wire a debounced `router.get` with `only: [...]` **partial reload** so only
-   the results region refetches.
-   *Concept: `router.get`, partial reloads, `request()->query()`.*
-8. 🧑 **See it:** filters update results without a full reload. 👀
-9. 🤖 Pint + PHPStan; 🧑 fix your code.
+## Milestone 4.2 — Filter toolbar + server-driven search/filter/sort (👀 frontend)
+> The three tabs (Selling/Buying/All) stay as-is. Below them: a one-line toolbar
+> — `[ search ] [ filter icon ] [ sort ] [ Apply ]`. The filter icon opens a
+> panel (desktop popover / mobile bottom sheet) with: category chips, a
+> category-scoped crop typeahead, region, availability, date range, price range.
+> Selections STAGE inside the panel; the toolbar **Apply** commits everything in
+> one request. Design: `market-filter-design-prompt.md`. Backend:
+> `market-filter-backend-prompt.md` (Part D).
+
+5. 🧑 `MarketController` reads all filter state from `request()->query()`:
+   `search`, `category`, `crop`, `region`, `availability`, `date_from`,
+   `date_to`, `price_min`, `price_max`, `sort`.
+6. 🧑 Apply it with `when()` conditionals or Offer **query scopes**:
+   - `search` → partial match on title/description + crop name (`whereHas`).
+   - `category` → `whereHas('product.crop', …category_id…)`.
+   - `crop` → `whereHas('product', …crop_id…)`.
+   - `region`, `availability` (dates bracket today), `date_from`/`date_to`.
+   - `price_min`/`price_max` → compare against the **integer minor-unit** column
+     (convert incoming major units first).
+   - `sort` → newest/oldest/price asc/price desc/quantity. Always PUBLIC only,
+     then `paginate()`.
+   *Concept: `when()` conditional query building / query scopes; `whereHas` for
+   related-model filters; price compared in minor units.*
+7. 🤖 Filter toolbar + panel `<template>` (search, filter popover/sheet, sort,
+   Apply) matching the design. The crop typeahead calls `GET /crops`.
+8. 🧑 `<script setup>`: staged filter state in the panel; on **Apply**, serialize
+   to query params and do ONE
+   `router.get(route('market'), params, { only: ['offers'], preserveState: true })`
+   partial reload. Type the crop-typeahead results.
+   *Concept: `router.get`, partial reloads (`only:`), building a query-param
+   object from form state.*
+9. 🧑 **See it:** set filters + sort, hit Apply, results refetch without a full
+   reload; the filter icon shows an active-count badge. 👀
+10. 🤖 Pint + PHPStan; 🧑 fix your code.
 
 ---
 
-# After all four features — update the docs (🤖 ask me)
+# After all features — update the docs (🤖 ask me)
 - CLAUDE.md → **Current phase**: mark Phase 3 features done/in progress; drop the
   "active refactor" note once the rename has landed.
-- CLAUDE.md → confirm the **Domain model** section matches the built tables
-  (Product, Offer, HarvestForecast) and their relations/roles.
+- CLAUDE.md → **Domain model**: confirm it matches the built tables (Product,
+  Offer, HarvestForecast) and add the taxonomy — `Category` + `Crop` and the
+  `Product belongsTo Crop belongsTo Category` chain; note the **closed-list** decision.
 - CLAUDE.md → note the new enums (`OfferStatus`, `OfferVisibility`,
   `ForecastStatus`) next to the `UserRole` enum note.
 
 # Phase 3 — Definition of done
 - [ ] `StorageListing` renamed to `Offer`; `Product` umbrella exists; `Money`
       cast in place; money + quantity stored as integers (no floats).
+- [ ] Crop taxonomy seeded (Category → Crop, closed list); Product references a
+      `crop_id`; crop-search endpoint works.
 - [ ] Farmer creates/edits/deletes own products, offers, and harvest forecasts.
 - [ ] Offer detail shows a `remaining_quantity` / `total_quantity` progress bar.
-- [ ] Market page browses public offers with working server-side filters.
+- [ ] Market: tabs unchanged; filter toolbar (search + filter panel + sort +
+      Apply) drives server-side search/filter/sort; results refetch via partial reload.
 - [ ] Pint + PHPStan clean.

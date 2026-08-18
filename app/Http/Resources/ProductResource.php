@@ -8,7 +8,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Builds the JSON payload for a single Product (show/edit). Matching TS shape:
- * resources/js/types/product (`Product`). Needs the `farmer` relation loaded.
+ * resources/js/types/product (`Product`). Needs the `farmer` and `crop.category`
+ * relations loaded.
  *
  * @property-read Product $resource
  */
@@ -25,7 +26,7 @@ class ProductResource extends JsonResource
             'id' => $product->id,
             'user_id' => $product->user_id,
             'name' => $product->name,
-            'region' => $product->region,
+            'crop' => CropResource::make($product->crop),
             'notes' => $product->notes,
             // 0 unless the query loaded the count (withCount/loadCount('offers')).
             'offers_count' => (int) ($product->offers_count ?? 0),

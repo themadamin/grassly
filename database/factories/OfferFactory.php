@@ -7,6 +7,7 @@ use App\Enums\OfferStatus;
 use App\Enums\OfferVisibility;
 use App\Models\Offer;
 use App\Models\Product;
+use App\Models\Region;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -26,25 +27,31 @@ class OfferFactory extends Factory
 
         return [
             'product_id' => Product::factory(),
-            // Keep the offer's denormalized farmer in sync with the product's
-            // owner. Documented factory pattern: a closure sees resolved
-            // attributes, so product_id is already an id here.
+            // A closure sees resolved attributes, so product_id is already an id here.
             'user_id' => fn (array $attributes) => Product::findOrFail((int) $attributes['product_id'])->user_id,
             'title' => $this->faker->words(3, true),
             'total_quantity' => $totalQuantity,
-            // Phase 3: no order claims yet, so remaining starts full.
             'remaining_quantity' => $totalQuantity,
             'unit' => $this->faker->randomElement(['kg', 'ton']),
-            // DECIMAL major units (dollars), like the form sends; MoneyCast
-            // converts to integer minor units on save. Capped at the USD max.
             'currency' => Currency::USD->value,
             'price' => $this->faker->randomFloat(2, 5, 9999.99),
-            'region' => $this->faker->city(),
             'available_from' => $availableFrom,
             'available_to' => $this->faker->optional()->dateTimeBetween($availableFrom, '+6 months'),
             'description' => $this->faker->optional()->sentence(),
             'visibility' => $this->faker->randomElement(OfferVisibility::cases()),
             'status' => $this->faker->randomElement(OfferStatus::cases()),
         ];
+    }
+
+    /**
+     * Deliverable zones aren't a column — attach them via the pivot after create.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Offer $offer): void {
+            $offer->regions()->attach(
+                Region::factory()->count($this->faker->numberBetween(1, 3))->create(),
+            );
+        });
     }
 }

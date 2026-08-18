@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -24,7 +25,7 @@ class UpdateProductRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'region' => ['required', 'string'],
+            'crop_id' => ['required', 'integer', Rule::exists('crops', 'id')],
             'notes' => ['nullable', 'string'],
         ];
     }

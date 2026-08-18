@@ -114,17 +114,30 @@
                         </div>
 
                         <div>
-                            <Label for="region" :class="labelClass"
-                                >Region</Label
+                            <Label :class="labelClass"
+                                >Delivery zones
+                                <span class="text-[#9CA395]"
+                                    >(where this offer can ship to — pick at
+                                    least one)</span
+                                ></Label
                             >
-                            <Input
-                                id="region"
-                                v-model="form.region"
-                                type="text"
-                                placeholder="Riverside"
-                                :class="fieldClass"
-                            />
-                            <InputError :message="form.errors.region" />
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    v-for="region in regions"
+                                    :key="region.id"
+                                    type="button"
+                                    class="cursor-pointer rounded-full border px-4 py-2 text-[13px] font-bold whitespace-nowrap transition-colors"
+                                    :class="
+                                        isRegionSelected(region.id)
+                                            ? 'border-lime-dark bg-lime text-ink'
+                                            : 'border-[#E8EAE2] bg-white text-[#5A6150]'
+                                    "
+                                    @click="toggleRegion(region.id)"
+                                >
+                                    {{ region.name }}
+                                </button>
+                            </div>
+                            <InputError :message="form.errors.region_ids" />
                         </div>
                     </section>
 
@@ -327,8 +340,8 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import OfferController from '@/actions/App/Http/Controllers/OfferController';
-import MoneyInput from '@/components/grassly/MoneyInput.vue';
 import InputError from '@/components/InputError.vue';
+import MoneyInput from '@/components/shared/MoneyInput.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -337,22 +350,29 @@ import { Spinner } from '@/components/ui/spinner';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
 import type { Offer } from '@/types/offer';
 import type { ProductListItem } from '@/types/product';
+import type { Region } from '@/types/region';
 
 const labelClass = 'mb-1.5 block text-[13px] font-bold';
 const fieldClass =
     'h-auto w-full rounded-xl border border-[#E8EAE2] bg-white px-4 py-3.5 text-[15px] font-medium text-ink transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:bg-white';
 
-const props = defineProps<{
-    offer: Offer;
-    statuses: Record<string, string>;
-    visibilities: Record<string, string>;
-    products: ProductListItem[];
-}>();
+const props = withDefaults(
+    defineProps<{
+        offer: Offer;
+        statuses: Record<string, string>;
+        visibilities: Record<string, string>;
+        products: ProductListItem[];
+        regions?: Region[];
+    }>(),
+    {
+        regions: () => [],
+    },
+);
 
 interface OfferForm {
     product_id: number | null;
     title: string;
-    region: string;
+    region_ids: number[];
     total_quantity: number | null;
     unit: string;
     // Major units (dollars); null when blank. Backend converts to minor units.
@@ -371,7 +391,7 @@ const PRICE_MAX = 9999.99;
 const form = useForm<OfferForm>({
     product_id: props.offer.product.id,
     title: props.offer.title,
-    region: props.offer.region,
+    region_ids: props.offer.regions.map((region) => region.id),
     total_quantity: props.offer.total_quantity,
     unit: props.offer.unit,
     price: props.offer.price,
@@ -381,6 +401,16 @@ const form = useForm<OfferForm>({
     description: props.offer.description ?? '',
     status: props.offer.status,
 });
+
+function isRegionSelected(id: number): boolean {
+    return form.region_ids.includes(id);
+}
+
+function toggleRegion(id: number) {
+    form.region_ids = isRegionSelected(id)
+        ? form.region_ids.filter((regionId) => regionId !== id)
+        : [...form.region_ids, id];
+}
 
 // Submit as an UPDATE (HTTP PUT).
 function submit() {

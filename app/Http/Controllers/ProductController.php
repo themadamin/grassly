@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Http\Resources\CategoryResource;
 use App\Http\Resources\ProductListItemResource;
 use App\Http\Resources\ProductResource;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -18,9 +20,9 @@ class ProductController extends Controller
      */
     public function index(): Response
     {
-        // Owner-scoped, with an offers count for the "N offers" card badge.
         $products = Product::query()
             ->where('user_id', request()->user()->id)
+            ->with('crop.category')
             ->withCount('offers')
             ->get();
 
@@ -34,7 +36,9 @@ class ProductController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('products/Create');
+        return Inertia::render('products/Create', [
+            'categories' => CategoryResource::collection(Category::all()),
+        ]);
     }
 
     /**
@@ -55,9 +59,8 @@ class ProductController extends Controller
      */
     public function show(Product $product): Response
     {
-        // load('farmer') for the nested payload; loadCount('offers') for the badge.
         return Inertia::render('products/Show', [
-            'product' => ProductResource::make($product->load('farmer')->loadCount('offers')),
+            'product' => ProductResource::make($product->load(['farmer', 'crop.category'])->loadCount('offers')),
         ]);
     }
 
@@ -67,7 +70,8 @@ class ProductController extends Controller
     public function edit(Product $product): Response
     {
         return Inertia::render('products/Edit', [
-            'product' => ProductResource::make($product->load('farmer')),
+            'product' => ProductResource::make($product->load(['farmer', 'crop.category'])),
+            'categories' => CategoryResource::collection(Category::all()),
         ]);
     }
 

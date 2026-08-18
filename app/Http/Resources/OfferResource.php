@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Builds the JSON payload for a single Offer (show/edit screens), including the
  * money/quantity display formatting. Matching TS shape: resources/js/types/offer (`Offer`).
  *
- * Needs `product` and `farmer` relations loaded (controller loads both).
+ * Needs `product`, `farmer`, and `regions` relations loaded (controller loads all three).
  *
  * @property-read Offer $resource
  */
@@ -36,7 +36,7 @@ class OfferResource extends JsonResource
             'unit' => $offer->unit,
             'total_display' => number_format($offer->total_quantity).' '.$offer->unit,
             'remaining_display' => number_format($offer->remaining_quantity).' '.$offer->unit,
-            'region' => $offer->region,
+            'regions' => RegionResource::collection($offer->regions),
             // MoneyCast exposes `price` as a decimal (per unit); currency formats it.
             'price' => $offer->price,
             'currency' => $offer->currency->value,

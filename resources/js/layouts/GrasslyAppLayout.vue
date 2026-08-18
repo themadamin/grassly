@@ -78,32 +78,6 @@
                 </h1>
 
                 <div class="flex items-center gap-3">
-                    <!-- Search -->
-                    <div class="relative w-60">
-                        <svg
-                            class="absolute top-1/2 left-3.5 -translate-y-1/2"
-                            width="17"
-                            height="17"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#6B7260"
-                            stroke-width="2.2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <circle cx="11" cy="11" r="7" />
-                            <path d="M21 21 L16.5 16.5" />
-                        </svg>
-                        <!-- TODO(you): wire search. For now it's a styled, inert input.
-                             Hint: v-model a ref, then debounce an Inertia router.get()
-                             to a search route once one exists. -->
-                        <input
-                            type="search"
-                            placeholder="Search…"
-                            class="w-full rounded-xl border border-[#E8EAE2] bg-stone py-[11px] pr-3.5 pl-10 text-sm font-medium text-ink outline-none placeholder:text-[#6B7260]"
-                        />
-                    </div>
-
                     <!-- Notifications -->
                     <button
                         type="button"
@@ -147,8 +121,8 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { InertiaLinkProps } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import type { SidebarIconName } from '@/components/grassly/SidebarNavIcon.vue';
-import SidebarNavLink from '@/components/grassly/SidebarNavLink.vue';
+import type { SidebarIconName } from '@/components/nav/SidebarNavIcon.vue';
+import SidebarNavLink from '@/components/nav/SidebarNavLink.vue';
 import { useInitials } from '@/composables/useInitials';
 import { home, market } from '@/routes';
 import { index as demandIndex } from '@/routes/demands/index';

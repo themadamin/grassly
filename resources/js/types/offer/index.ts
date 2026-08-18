@@ -1,5 +1,6 @@
 import type { Currency, OfferStatus, OfferVisibility } from '@/types/enums';
 import type { ProductListItem } from '@/types/product';
+import type { Region } from '@/types/region';
 import type { User } from '@/types/user';
 
 // Full offer detail — matches App\Http\Resources\OfferResource.
@@ -14,7 +15,7 @@ export type Offer = {
     unit: string;
     total_display: string;
     remaining_display: string;
-    region: string;
+    regions: Region[];
     price: number;
     currency: Currency;
     price_formatted: string;
@@ -30,7 +31,7 @@ export type OfferListItem = {
     id: number;
     product: ProductListItem;
     title: string;
-    region: string;
+    regions: Region[];
     total_quantity: number;
     remaining_quantity: number;
     unit: string;

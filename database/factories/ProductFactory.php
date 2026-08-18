@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Crop;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,7 +22,7 @@ class ProductFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => $this->faker->randomElement(['Wheat', 'Maize', 'Rice', 'Barley', 'Potatoes', 'Soybeans', 'Tomatoes']),
-            'region' => $this->faker->city(),
+            'crop_id' => Crop::factory(),
             'notes' => $this->faker->optional()->sentence(),
         ];
     }

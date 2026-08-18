@@ -132,27 +132,6 @@
                         </div>
 
                         <div
-                            class="mb-3 flex items-center gap-2 text-[13px] text-[#6B7260]"
-                        >
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#9AA08E"
-                                stroke-width="2.2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path
-                                    d="M12 21 C12 21 5 14 5 9 a7 7 0 0 1 14 0 c0 5 -7 12 -7 12 Z"
-                                />
-                                <circle cx="12" cy="9" r="2.4" />
-                            </svg>
-                            {{ product.region }}
-                        </div>
-
-                        <div
                             class="mb-3 inline-flex items-center gap-1.5 rounded-full bg-lime-pale px-2.5 py-1 text-xs font-bold text-[#3F5610]"
                         >
                             {{ product.offers_count }}
@@ -249,7 +228,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import ProductController from '@/actions/App/Http/Controllers/ProductController';
-import ConfirmDialog from '@/components/grassly/ConfirmDialog.vue';
+import ConfirmDialog from '@/components/shared/ConfirmDialog.vue';
 import GrasslyAppLayout from '@/layouts/GrasslyAppLayout.vue';
 import { create as createRoute } from '@/routes/products/index';
 import type { ProductListItem } from '@/types/product';
