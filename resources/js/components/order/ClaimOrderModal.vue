@@ -33,7 +33,8 @@
                     {{ offer.title }}
                 </DialogTitle>
                 <DialogDescription class="mt-0.5 text-[13px] text-[#3F5610]">
-                    {{ offer.farmer?.name ?? 'Farmer' }} · {{ offer.region }}
+                    {{ offer.farmer?.name ?? 'Farmer' }} ·
+                    {{ offer.regions.map((r) => r.name).join(', ') }}
                 </DialogDescription>
             </div>
 
