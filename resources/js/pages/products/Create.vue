@@ -205,8 +205,6 @@ const form = useForm<ProductForm>({
     notes: '',
 });
 
-// `category` only narrows the crop search below — it isn't submitted, the
-// product only stores crop_id.
 const category = ref<number | null>(null);
 const cropQuery = ref('');
 const cropOptions = ref<Crop[]>([]);
@@ -233,10 +231,6 @@ async function searchCrops(
     return response;
 }
 
-// Shared by every trigger below (typed, focused, category change) so they
-// all use one staleness guard: a response only gets applied if no newer
-// search has started since, otherwise a slow response to an earlier
-// keystroke could overwrite a faster, more recent one.
 async function runSearch(term: string = cropQuery.value) {
     const token = ++searchToken;
     const results = await searchCrops(category.value, term);
@@ -258,17 +252,12 @@ function clearCrop() {
     cropQuery.value = '';
 }
 
-// Tied to the <select>'s own @change, not a generic watch(category, ...) —
-// so it can't also fire as a side effect of selectCrop() setting
-// category.value above.
 async function onCategoryChange() {
     clearCrop();
     await runSearch();
 }
 
 function onCropQueryInput() {
-    // The text no longer matches the previously picked crop the moment the
-    // user types — invalidate it now, don't wait for the debounced search.
     form.crop_id = null;
 
     if (debounceTimer !== undefined) {
@@ -282,14 +271,9 @@ function onCropQueryInput() {
 }
 
 async function onCropFocus() {
-    // Empty term, not the leftover text from an already-selected crop —
-    // otherwise re-focusing a filled-in field only shows close matches to
-    // the current value instead of the full category list.
     await runSearch('');
 }
 
-// mousedown.prevent on each option (template) stops it from blurring the
-// input before its click fires, so this can close unconditionally.
 function onCropBlur() {
     cropOptions.value = [];
 }
